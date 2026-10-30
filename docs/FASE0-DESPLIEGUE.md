@@ -2,6 +2,11 @@
 
 > Cimientos del backoffice: secretos fuera del repositorio, RBAC, variantes e inventario con libro mayor.
 > Tiempo estimado: **20 minutos**. Ventana recomendada: con la tienda sin tráfico.
+>
+> **Estado: desplegada el 30/10/2026.** Los instaladores (`install.php`, `install.lock`,
+> `migrar_tallas.php`, `migrar_fase0.php`) se eliminaron del servidor y del repositorio al terminar.
+> Si necesitas volver a ejecutar el migrador, recupéralo con
+> `git show ad9da9b:api/migrar_fase0.php > api/migrar_fase0.php`, súbelo, ejecútalo y bórralo otra vez.
 
 ---
 
