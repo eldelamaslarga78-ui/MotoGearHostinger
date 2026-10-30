@@ -29,9 +29,7 @@
 
 ## Paso 1 · Crear `config.local.php` fuera del sitio
 
-En hPanel → **Administrador de archivos**, entra a `/home/uXXXXXXX/` (el home, **no** `public_html`).
-
-1. Crea el archivo `config.local.php` con este contenido y tus datos actuales de MySQL:
+En hPanel → **Administrador de archivos**, crea `config.local.php` con este contenido y tus datos actuales de MySQL:
 
 ```php
 <?php
@@ -41,10 +39,15 @@ define('DB_USER', 'u000000000_Motogear');
 define('DB_PASS', 'TU_CLAVE_ACTUAL');       // no la escribas en el repositorio
 ```
 
-2. Verifica que la ruta queda así: `/home/uXXXXXXX/config.local.php` y el sitio en `/home/uXXXXXXX/public_html/`.
-   El cargador busca exactamente ahí (`dirname(__DIR__, 2)` desde `public_html/api/`).
-3. Si tu plan no te deja escribir fuera de `public_html`, usa `public_html/api/config.local.php`
-   (funciona igual, pero `api/.htaccess` lo bloquea por HTTP y el log avisará de que está dentro del sitio).
+**Dónde dejarlo** depende de cómo esté montado el sitio (siempre fuera de la carpeta pública):
+
+| Estructura del hosting | Deja `config.local.php` en | `dirname(__DIR__, N)` en `api/config.php` |
+|---|---|---|
+| `/home/uXXXXXXX/public_html/api/` | `/home/uXXXXXXX/` | `2` |
+| Subdominio: `…/domains/midominio.com/public_html/subdominio/api/` | `…/domains/midominio.com/` | `3` (caso actual de la tienda) |
+
+Si tu plan no te deja escribir fuera de `public_html`, usa `public_html/api/config.local.php`:
+funciona igual, `api/.htaccess` lo bloquea por HTTP y el log avisará de que está dentro del sitio.
 
 La plantilla `api/config.local.php.ejemplo` está en el repo solo como referencia. **No la edites ahí.**
 

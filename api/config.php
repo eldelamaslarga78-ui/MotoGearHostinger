@@ -17,7 +17,7 @@ $mgEnv = getenv('MG_CONFIG');
 if (is_string($mgEnv) && $mgEnv !== '') {
     $mgRutas[] = $mgEnv;
 }
-$mgRutas[] = dirname(__DIR__, 2) . '/config.local.php';
+$mgRutas[] = dirname(__DIR__, 3) . '/config.local.php';
 $mgRutas[] = __DIR__ . '/config.local.php';
 
 $mgCargado = null;
