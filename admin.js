@@ -4,7 +4,10 @@
   const API = 'api/api.php', $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const money = n => '$' + Math.round(n).toLocaleString('es-CO');
-  let CSRF = '', D = { categorias: [], productos: [], cupones: [], pedidos: [], mensajes: [] };
+  let CSRF = '', PERMS = [], D = { categorias: [], productos: [], cupones: [], pedidos: [], mensajes: [] };
+  const puede = p => PERMS.includes('*') || PERMS.includes(p);
+  // Cada pestaña declara el permiso que la habilita (null = siempre visible)
+  const PERM_TAB = { pedidos: 'pedidos.ver', productos: 'productos.ver', categorias: 'categorias.editar', cupones: 'cupones.ver', mensajes: 'mensajes.ver', cuenta: null };
   let tt; const toast = (m, tipo = 'ok') => { const t = $('#toast'); t.setAttribute('role', tipo === 'error' ? 'alert' : 'status'); t.classList.remove('ok', 'error'); t.classList.add(tipo, 'show'); t.textContent = m; clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 4000); };
   const show = on => { $('#login').hidden = on; $('#panel').hidden = !on; };
   const api = async (r, body) => {
@@ -18,10 +21,31 @@
   const refresh = async () => { D = await api('admin'); render(); };
 
   /* ----- Acceso ----- */
-  (async () => { try { const me = await api('me'); if (me.admin) { CSRF = me.csrf; show(true); await refresh(); } } catch {} })();
+  const aplicarPermisos = () => {
+    // Pestañas visibles según el rol
+    $$('.tab').forEach(t => { const p = PERM_TAB[t.dataset.tab]; t.hidden = !!(p && !puede(p)); });
+    const activo = $('.tab.activo');
+    if (!activo || activo.hidden) {
+      const primero = $$('.tab').find(t => !t.hidden);
+      if (primero) primero.click();
+    }
+    // Formularios de alta/edición
+    $('#form-prod').hidden = !puede('productos.editar');
+    $('#form-cat').hidden = !puede('categorias.editar');
+    $('#form-cup').hidden = !puede('cupones.editar');
+  };
+  const cargarSesion = async () => {
+    const me = await api('me');
+    if (!me.admin) return false;
+    PERMS = me.permisos || [];
+    if (me.csrf) CSRF = me.csrf;
+    aplicarPermisos();
+    return true;
+  };
+  (async () => { try { if (await cargarSesion()) { show(true); await refresh(); } } catch {} })();
   $('#login-form').addEventListener('submit', async e => {
     e.preventDefault();
-    try { const r = await api('login', { usuario: $('#usuario').value, clave: $('#clave').value }); CSRF = r.csrf; $('#clave').value = ''; show(true); await refresh(); }
+    try { const r = await api('login', { usuario: $('#usuario').value, clave: $('#clave').value }); CSRF = r.csrf; $('#clave').value = ''; await cargarSesion(); show(true); await refresh(); }
     catch (err) { toast(err.message, 'error'); }
   });
   $('#salir').addEventListener('click', async () => { try { await api('logout', {}); } catch {} location.reload(); });
@@ -52,21 +76,26 @@
       <td><img src="${esc(p.img)}" alt=""></td>
       <td><strong>${esc(p.nombre)}</strong> <small>${esc(p.marca)}</small>${+p.destacado ? ' <span class="etiqueta">Destacado</span>' : ''}${+p.activo ? '' : ' <span class="etiqueta">Oculto</span>'}</td>
       <td>${esc(catName(p.categoria_id))}</td><td>${money(p.precio)}</td><td class="${+p.stock <= 0 ? 'agotado' : ''}">${stockTxt(p)}</td>
-      <td><button class="btn sec mini" data-edit="${p.id}">Editar</button><button class="btn mini" data-del="producto:${p.id}">Eliminar</button></td></tr>`).join('') : '<tr><td class="vacio">Sin productos</td></tr>';
+      <td><button class="btn sec mini" data-edit="${p.id}"${puede('productos.editar') ? '' : ' hidden'}>Editar</button><button class="btn mini" data-del="producto:${p.id}"${puede('productos.borrar') ? '' : ' hidden'}>Eliminar</button></td></tr>`).join('') : '<tr><td class="vacio">Sin productos</td></tr>';
     $('#tabla-cat').innerHTML = '<tr><th>Categoría</th><th>Productos</th><th></th></tr>' + D.categorias.map(c => `<tr><td>${esc(c.nombre)}</td><td>${D.productos.filter(p => p.categoria_id === c.id).length}</td>
-      <td><button class="btn sec mini" data-ren="${esc(c.id)}">Renombrar</button><button class="btn mini" data-del="categoria:${esc(c.id)}">Eliminar</button></td></tr>`).join('');
+      <td><button class="btn sec mini" data-ren="${esc(c.id)}"${puede('categorias.editar') ? '' : ' hidden'}>Renombrar</button><button class="btn mini" data-del="categoria:${esc(c.id)}"${puede('categorias.borrar') ? '' : ' hidden'}>Eliminar</button></td></tr>`).join('');
     $('#tabla-cup').innerHTML = D.cupones.length ? '<tr><th>Código</th><th>Desc.</th><th>Vence</th><th>Mínimo</th><th>Usos</th><th>Estado</th><th></th></tr>' + D.cupones.map(k => `<tr>
       <td><strong>${esc(k.codigo)}</strong></td><td>${+k.pct}%</td><td>${esc(k.vence || '—')}</td><td>${money(k.minimo)}</td><td>${+k.usos}${k.usos_max ? ' / ' + +k.usos_max : ''}</td><td>${+k.activo ? 'Activo' : 'Inactivo'}</td>
-      <td><button class="btn sec mini" data-tog="${esc(k.codigo)}">${+k.activo ? 'Desactivar' : 'Activar'}</button><button class="btn mini" data-del="cupon:${esc(k.codigo)}">Eliminar</button></td></tr>`).join('') : '<tr><td class="vacio">Sin cupones</td></tr>';
+      <td><button class="btn sec mini" data-tog="${esc(k.codigo)}"${puede('cupones.editar') ? '' : ' hidden'}>${+k.activo ? 'Desactivar' : 'Activar'}</button><button class="btn mini" data-del="cupon:${esc(k.codigo)}"${puede('cupones.borrar') ? '' : ' hidden'}>Eliminar</button></td></tr>`).join('') : '<tr><td class="vacio">Sin cupones</td></tr>';
     $('#lista-msg').innerHTML = D.mensajes.length ? D.mensajes.map(m => `<div class="msg"><strong>${esc(m.nombre)}</strong> · ${esc(m.asunto)}
       <small>${esc(m.email)}${m.telefono ? ' · ' + esc(m.telefono) : ''} · ${esc(m.creado)}</small><p>${esc(m.mensaje)}</p>
-      <div><a class="btn sec mini" href="mailto:${esc(m.email)}">Responder</a> <button class="btn mini" data-del="mensaje:${m.id}">Eliminar</button></div></div>`).join('') : '<div class="caja vacio">Sin mensajes</div>';
+      <div><a class="btn sec mini" href="mailto:${esc(m.email)}">Responder</a> <button class="btn mini" data-del="mensaje:${m.id}"${puede('mensajes.borrar') ? '' : ' hidden'}>Eliminar</button></div></div>`).join('') : '<div class="caja vacio">Sin mensajes</div>';
   }
 
   /* ----- Eventos delegados ----- */
   document.addEventListener('click', e => {
     const t = e.target, del = t.dataset.del;
-    if (del) { const [tipo, id] = [del.slice(0, del.indexOf(':')), del.slice(del.indexOf(':') + 1)]; if (confirm('¿Eliminar? Esta acción no se puede deshacer.')) run(() => api('borrar', { tipo, id }), 'Eliminado'); }
+    if (del) {
+      const [tipo, id] = [del.slice(0, del.indexOf(':')), del.slice(del.indexOf(':') + 1)];
+      if (confirm('¿Eliminar? Esta acción no se puede deshacer.')) {
+        run(async () => { const r = await api('borrar', { tipo, id }); toast(r.mensaje || 'Eliminado'); }, '');
+      }
+    }
     if (t.dataset.ren) { const c = D.categorias.find(x => x.id === t.dataset.ren), n = prompt('Nuevo nombre', c.nombre); if (n && n.trim()) run(() => api('guardar', { tipo: 'categoria', data: { id: c.id, nombre: n.trim() } }), 'Categoría actualizada'); }
     if (t.dataset.tog) { const k = D.cupones.find(x => x.codigo === t.dataset.tog); run(() => api('guardar', { tipo: 'cupon', data: { codigo: k.codigo, pct: k.pct, vence: k.vence || '', minimo: k.minimo, usos_max: k.usos_max, activo: !+k.activo } }), 'Cupón actualizado'); }
     if (t.dataset.edit) {

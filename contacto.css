@@ -225,6 +225,12 @@
     overflow: hidden;
 }
 
+.mapa-wrap iframe {
+    border: 0;
+    display: block;
+    width: 100%;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
     .pagina-contacto {

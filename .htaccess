@@ -1,3 +1,9 @@
+# ============================================================================
+# MotoGear · .htaccess
+# ============================================================================
+
+Options -Indexes
+
 RewriteEngine On
 
 # 1. Eliminar la extensión .html de la URL de forma interna
@@ -9,8 +15,41 @@ RewriteRule ^([^\.]+)$ $1.html [NC,L]
 RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
 RewriteRule ^ %1 [R=301,L]
 
+# ============================================================================
+# Cabeceras de seguridad
+# ============================================================================
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+  # Solo se aplica cuando el navegador está en HTTPS (los navegadores ignoran HSTS por HTTP).
+  Header always set Strict-Transport-Security "max-age=31536000"
 
-# Evita que el navegador use versiones viejas de tus archivos: siempre revalida (si no cambió, responde 304 y es rápido)
+  # CSP del sitio público. Si añades un servicio externo (analítica, pagos, mapas,
+  # imágenes de otro dominio), ábrelo aquí y en ningún otro sitio.
+  # images.pexels.com: fotos de sobre.html · google.com: mapa de contacto.
+  <FilesMatch "\.html$">
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https://images.pexels.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-src https://www.google.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+  </FilesMatch>
+</IfModule>
+
+# ============================================================================
+# Archivos que no deben servirse nunca
+# ============================================================================
+<FilesMatch "\.(lock|sql|md|log|ini|dist|ejemplo|example|bak|zip|sh)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^config\.local\.php$">
+  Require all denied
+</FilesMatch>
+
+# ============================================================================
+# Caché
+# El navegador revalida JS/CSS/HTML: si no cambió responde 304 (rápido) y
+# nunca se queda con una versión vieja tras un despliegue.
+# ============================================================================
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|html)$">
     Header set Cache-Control "no-cache"

@@ -1,0 +1,18 @@
+<?php
+/*
+ * PLANTILLA de credenciales.
+ *
+ * 1. Copia este archivo como `config.local.php`.
+ * 2. Colócalo UN NIVEL ARRIBA de public_html (en el home del hosting), no dentro del sitio.
+ *    En Hostinger: Administrador de archivos → /home/uXXXXXXX/config.local.php
+ *    Alternativa si no tienes acceso: api/config.local.php (queda accesible por web, menos seguro).
+ * 3. Rellena los valores de hPanel → Bases de datos → Administración MySQL.
+ * 4. NO subas config.local.php al repositorio (ya está en .gitignore).
+ *
+ * Los valores de abajo son EJEMPLOS: no funcionan.
+ */
+
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'u000000000_Ecomerce');
+define('DB_USER', 'u000000000_Motogear');
+define('DB_PASS', 'cambia-esta-clave');

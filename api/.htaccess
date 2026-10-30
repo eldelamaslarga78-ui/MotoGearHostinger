@@ -1,4 +1,28 @@
-# Evita que el navegador use versiones viejas de tus archivos: siempre revalida (si no cambió, responde 304 y es rápido)
+# ============================================================================
+# MotoGear · api/.htaccess
+# ============================================================================
+
+Options -Indexes
+
+# Credenciales y artefactos internos: nunca por HTTP
+<FilesMatch "\.(lock|sql|md|log|ini|dist|ejemplo|example|bak)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^config\.local\.php$">
+  Require all denied
+</FilesMatch>
+
+# Instaladores ya usados: si quedaron en el servidor, se bloquean por defecto.
+<FilesMatch "^(install|migrar_tallas)\.php$">
+  Require all denied
+</FilesMatch>
+
+# Cuando borres api/migrar_fase0.php puedes descomentar esto como red de seguridad:
+# <FilesMatch "^migrar_fase0\.php$">
+#   Require all denied
+# </FilesMatch>
+
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|html)$">
     Header set Cache-Control "no-cache"

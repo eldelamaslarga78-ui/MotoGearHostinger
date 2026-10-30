@@ -1,2 +1,13 @@
 .vscode/
 sftp.json
+
+# Credenciales reales: nunca al repositorio
+config.local.php
+api/config.local.php
+
+# Temporales
+storage/
+*.log
+*.bak
+Thumbs.db
+.DS_Store
