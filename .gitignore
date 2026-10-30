@@ -11,3 +11,7 @@ storage/
 *.bak
 Thumbs.db
 .DS_Store
+
+# Copia accidental de la API dentro de img/ (debe borrarse del servidor)
+img/api/
+img/admin.js
