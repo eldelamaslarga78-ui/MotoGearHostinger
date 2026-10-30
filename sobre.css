@@ -1,0 +1,455 @@
+/* ===== HERO SOBRE ===== */
+.hero-sobre {
+    padding-top: 100px;
+    background: linear-gradient(135deg, var(--rojo) 0%, #500 100%);
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-sobre-texto h1 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.hero-sobre-texto p {
+    font-size: 1rem;
+    color: #f0c0c0;
+}
+
+/* ===== HISTORIA ===== */
+/* Texto e imagen en dos columnas */
+.seccion-historia {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    padding: 60px 8%;
+    background-color: var(--gris);
+    align-items: center;
+}
+
+.sobre-titulo {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2rem;
+    color: var(--rojo);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: var(--rojo) solid 3px;
+    display: inline-block;
+}
+
+.historia-texto p {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+
+.historia-texto strong {
+    color: var(--rojo);
+}
+
+/* Botón de la sección historia */
+.btn-historia {
+    display: inline-block;
+    margin-top: 10px;
+    background: var(--rojo);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-family: "Baloo 2", sans-serif;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-historia:hover {
+    background: var(--rojo-hover);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Imagen de la historia */
+.historia-imagen img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+/* ===== CIFRAS ===== */
+/* Franja roja con estadísticas */
+.seccion-cifras {
+    background: var(--rojo);
+    padding: 50px 8%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    text-align: center;
+}
+
+.cifra {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    border-right: rgba(255,255,255,0.2) solid 1px;
+}
+
+.cifra:last-child {
+    border-right: none;
+}
+
+/* Número grande destacado */
+.cifra-numero {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+}
+
+.cifra-label {
+    font-size: 0.9rem;
+    color: #f0c0c0;
+    font-weight: 400;
+}
+
+/* ===== MISIÓN Y VISIÓN ===== */
+.seccion-mv {
+    background-color: var(--gris);
+    padding: 20px 8%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+/* Cada tarjeta de misión/visión/valores */
+.mv-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mv-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(136,0,0,0.15);
+}
+
+/* Emoji decorativo */
+.mv-icono {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+
+.mv-card h3 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.3rem;
+    color: var(--rojo);
+    margin-bottom: 12px;
+}
+
+.mv-card p {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+/* ===== EQUIPO ===== */
+.seccion-equipo {
+    background: #1a1a1a;
+    padding: 60px 8%;
+}
+
+/* Título centrado de sección */
+.sobre-titulo-centrado {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2rem;
+    color: var(--gris);
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 10px;
+}
+
+/* Grid de tarjetas de equipo */
+.equipo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+/* Cada tarjeta de miembro */
+.equipo-card {
+    background: #2a2a2a;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: transform 0.3s ease;
+    border-bottom: var(--rojo) solid 4px;   /* acento rojo inferior */
+}
+
+.equipo-card:hover {
+    transform: translateY(-6px);
+}
+
+/* Foto circular del miembro */
+.equipo-foto {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 16px;
+    border: 3px solid var(--rojo);
+}
+
+.equipo-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.equipo-nombre {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    color: var(--gris);
+    margin-bottom: 4px;
+}
+
+.equipo-cargo {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--rojo);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.equipo-desc {
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.6;
+}
+
+
+/* ===== PRÓXIMOS SERVICIOS ===== */
+.seccion-servicios {
+    background-color: var(--gris);
+    padding: 60px 8%;
+    text-align: center;
+}
+
+.sobre-titulo-centrado{
+    font-size: 3rem;
+    color: var(--rojo);
+    margin-top: -20px;
+    margin-bottom: 40px;
+}
+/* Subtítulo descriptivo debajo del título */
+.servicios-subtitulo{
+    font-size: 1rem;
+    color: var(--rojo);
+    margin-top: -20px;
+    margin-bottom: 40px;
+}
+
+/* Grid de 3 tarjetas en escritorio */
+.servicios-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    margin-top: 20px;
+}
+
+/* Cada tarjeta de servicio */
+.servicio-card {
+    background: white;
+    border-radius: 16px;
+    padding: 36px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 4px solid var(--rojo);
+}
+
+.servicio-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(136,0,0,0.15);
+}
+
+/* Emoji del servicio */
+.servicio-icono {
+    font-size: 2.8rem;
+    margin-bottom: 16px;
+}
+
+.servicio-card h4 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.2rem;
+    color: var(--rojo);
+    margin-bottom: 10px;
+}
+
+.servicio-card p {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+/* Badge "Próximamente" generado automáticamente */
+.servicio-card::after {
+    content: "Próximamente";
+    display: inline-block;
+    margin-top: 16px;
+    background: rgba(136,0,0,0.1);
+    color: var(--rojo);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ===== RESPONSIVE SERVICIOS ===== */
+@media (max-width: 900px) {
+    .servicios-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .servicios-subtitulo {
+        margin-top: -10px;
+    }
+}
+
+
+/* ===== CTA FINAL ===== */
+/* Franja de llamado a la acción al final */
+.seccion-cta {
+    background: linear-gradient(135deg, var(--rojo) 0%, #500 100%);
+    padding: 70px 8%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.seccion-cta h2 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.2rem;
+    color: white;
+}
+
+.seccion-cta p {
+    font-size: 1rem;
+    color: #f0c0c0;
+}
+
+.cta-botones {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Botón primario blanco */
+.btn-cta-primario {
+    background: white;
+    color: var(--rojo);
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-cta-primario:hover {
+    background: var(--gris);
+    color: var(--rojo);
+    transform: translateY(-2px);
+}
+
+/* Botón secundario con borde */
+.btn-cta-secundario {
+    background: transparent;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    border: 2px solid white;
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-cta-secundario:hover {
+    background: white;
+    color: var(--rojo);
+    transform: translateY(-2px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+
+    .seccion-historia {
+        grid-template-columns: 1fr;
+        padding: 40px 6%;
+    }
+
+    .historia-imagen {
+        order: -1;              /* imagen primero en móvil */
+    }
+
+    .historia-imagen img {
+        height: 250px;
+    }
+
+    .seccion-cifras {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cifra {
+        border-right: none;
+        border-bottom: rgba(255,255,255,0.2) solid 1px;
+    }
+
+    .seccion-mv {
+        grid-template-columns: 1fr;
+    }
+
+    .equipo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+
+    .seccion-cifras {
+        grid-template-columns: 1fr;
+        padding: 30px 6%;
+    }
+
+    .seccion-cta {
+        padding: 50px 6%;
+    }
+
+    .cta-botones {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-cta-primario,
+    .btn-cta-secundario {
+        width: 100%;
+        text-align: center;
+    }
+}

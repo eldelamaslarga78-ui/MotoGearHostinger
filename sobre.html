@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Conoce MotoGear Bogotá: nuestra historia, misión, equipo y los servicios a domicilio que vienen para tu moto.">
+    <meta name="theme-color" content="#880000">
+    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="sobre.css?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Sobre Nosotros - MotoGear Bogotá</title>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <nav aria-label="Principal">
+            <div class="logo">
+                <a href="index.html">
+                    <img alt="MotoGear Bogotá" src="./img/Logo.webp" class="logo-img">
+                </a>
+            </div>
+
+            <input type="checkbox" id="menu-toggle" class="menu-toggle-input">
+            <label for="menu-toggle" class="hamburguesa" aria-label="Abrir menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
+
+            <ul>
+                <a href="productos.html"><li class="item-menu">Productos</li></a>
+                <a href="carrito.html"><li class="item-menu" id="cart-badge">Carrito</li></a>
+                <a href="sobre.html"><li class="item-menu">Sobre Nosotros</li></a>
+                <a href="contacto.html"><li class="item-menu">Contacto</li></a>
+            </ul>
+
+            <div class="iconos">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-instagram icon" viewBox="0 0 16 16">
+                    <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
+                </svg>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tiktok icon" viewBox="0 0 16 16">
+                    <path d="M9 0h1.98c.144.715.54 1.617 1.235 2.512C12.895 3.389 13.797 4 15 4v2c-1.753 0-3.07-.814-4-1.829V11a5 5 0 1 1-5-5v2a3 3 0 1 0 3 3z"/>
+                </svg>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-facebook icon" viewBox="0 0 16 16">
+                    <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
+                </svg>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ===== HERO SOBRE ===== -->
+    <section class="hero-sobre">
+        <div class="hero-sobre-texto">
+            <h1>Sobre Nosotros</h1>
+            <p>Un nuevo proyecto nacido para la comunidad motera de Colombia</p>
+        </div>
+    </section>
+
+    <!-- ===== HISTORIA ===== -->
+    <section class="seccion-historia">
+        <div class="historia-texto">
+            <h2 class="sobre-titulo">Nuestra Historia</h2>
+            <p>MotoGear Bogotá nació de la pasión por las dos ruedas y de una necesidad real: la comunidad motera colombiana merece productos de calidad y servicios a la altura de su estilo de vida.</p>
+            <p>Somos un proyecto nuevo, joven y con visión. Hoy ofrecemos equipamiento premium para todo tipo de rider, y próximamente llevaremos hasta tu puerta servicios innovadores que cambiarán la forma en que cuidas tu moto.</p>
+            <p><strong>Esto apenas comienza.</strong> Somos parte de la comunidad, rodamos contigo.</p>
+            <a href="productos.html" class="btn-historia">Ver productos</a>
+        </div>
+        <div class="historia-imagen">
+            <img loading="lazy" decoding="async" src="https://images.pexels.com/photos/14085022/pexels-photo-14085022.jpeg" alt="Comunidad motera">
+        </div>
+    </section>
+
+    <!-- ===== CIFRAS ===== -->
+    <section class="seccion-cifras">
+        <div class="cifra">
+            <span class="cifra-numero">+200</span>
+            <span class="cifra-label">Productos disponibles</span>
+        </div>
+        <div class="cifra">
+            <span class="cifra-numero">4</span>
+            <span class="cifra-label">Marcas premium</span>
+        </div>
+        <div class="cifra">
+            <span class="cifra-numero">3</span>
+            <span class="cifra-label">Servicios próximamente</span>
+        </div>
+        <div class="cifra">
+            <span class="cifra-numero">100%</span>
+            <span class="cifra-label">A domicilio</span>
+        </div>
+    </section>
+
+    <!-- ===== MISIÓN Y VISIÓN ===== -->
+    <section class="seccion-mv">
+        <div class="mv-card">
+            <div class="mv-icono">🎯</div>
+            <h3>Misión</h3>
+            <p>Ser el aliado número uno del motociclista colombiano, ofreciendo productos certificados de calidad premium y servicios innovadores que faciliten y enriquezcan su experiencia sobre dos ruedas.</p>
+        </div>
+        <div class="mv-card">
+            <div class="mv-icono">🔭</div>
+            <h3>Visión</h3>
+            <p>Consolidarnos como la plataforma integral para motociclistas en Colombia, expandiendo nuestros servicios a domicilio a las principales ciudades del país antes de 2028.</p>
+        </div>
+        <div class="mv-card">
+            <div class="mv-icono">⚙️</div>
+            <h3>Valores</h3>
+            <p>Comunidad, innovación y calidad. Creemos en un servicio honesto, cercano y apasionado, donde cada cliente es un rider al que queremos ver rodar seguro y con estilo.</p>
+        </div>
+    </section>
+
+    <!-- ===== PRÓXIMOS SERVICIOS ===== -->
+    <section class="seccion-servicios">
+        <h2 class="sobre-titulo-centrado">Próximamente</h2>
+        <p class="servicios-subtitulo">Servicios innovadores a domicilio para tu moto</p>
+
+        <div class="servicios-grid">
+
+            <div class="servicio-card">
+                <div class="servicio-icono">🚿</div>
+                <h4>Lavado a Domicilio</h4>
+                <p>Lavado profesional de tu moto sin que tengas que moverla. Agenda y nosotros llegamos donde estés.</p>
+            </div>
+
+            <div class="servicio-card">
+                <div class="servicio-icono">✨</div>
+                <h4>Detallado Premium</h4>
+                <p>Limpieza profunda, pulido y protección de superficies. Deja tu moto como recién salida del concesionario.</p>
+            </div>
+
+            <div class="servicio-card">
+                <div class="servicio-icono">🎨</div>
+                <h4>Forrado Wrap</h4>
+                <p>Personaliza tu moto con viniles de la más alta calidad. Cambia de look sin afectar la pintura original.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===== EQUIPO ===== -->
+    <section class="seccion-equipo">
+        <h2 class="sobre-titulo-centrado">Nuestro Equipo</h2>
+
+        <div class="equipo-grid">
+
+            <div class="equipo-card">
+                <div class="equipo-foto">
+                    <img loading="lazy" decoding="async" src="https://images.pexels.com/photos/4560442/pexels-photo-4560442.jpeg" alt="Fundador">
+                </div>
+                <h4 class="equipo-nombre">Tu Nombre</h4>
+                <span class="equipo-cargo">Fundador & CEO</span>
+                <p class="equipo-desc">Motociclista apasionado y emprendedor. Creó MotoGear para darle a la comunidad motera colombiana lo que siempre mereció.</p>
+            </div>
+
+            <div class="equipo-card">
+                <div class="equipo-foto">
+                    <img loading="lazy" decoding="async" src="https://images.pexels.com/photos/19062243/pexels-photo-19062243.jpeg" alt="Jefa de ventas">
+                </div>
+                <h4 class="equipo-nombre">Tu Nombre</h4>
+                <span class="equipo-cargo">Jefa de Ventas</span>
+                <p class="equipo-desc">Especialista en atención al cliente y conocedora de todas las marcas que manejamos. Siempre lista para asesorarte.</p>
+            </div>
+
+            <div class="equipo-card">
+                <div class="equipo-foto">
+                    <img loading="lazy" decoding="async" src="https://images.pexels.com/photos/26558694/pexels-photo-26558694.jpeg" alt="Técnico">
+                </div>
+                <h4 class="equipo-nombre">Tu Nombre</h4>
+                <span class="equipo-cargo">Asesor Técnico</span>
+                <p class="equipo-desc">Piloto de enduro y experto en certificaciones DOT/ECE. Lidera el desarrollo de los nuevos servicios a domicilio.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===== CTA FINAL ===== -->
+    <section class="seccion-cta">
+        <h2>¿Listo para equiparte?</h2>
+        <p>Visítanos en nuestra tienda o explora nuestro catálogo online</p>
+        <div class="cta-botones">
+            <a href="productos.html" class="btn-cta-primario">Ver productos</a>
+            <a href="contacto.html" class="btn-cta-secundario">Contáctanos</a>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="footer-contenido">
+            <div class="footer-col">
+                <h3 class="footer-logo">MotoGear Bogotá</h3>
+                <p class="footer-desc">Tu tienda de accesorios y equipamiento para moto en Bogotá. Calidad, seguridad y estilo en cada ruta.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-titulo">Navegación</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="productos.html">Productos</a></li>
+                    <li><a href="carrito.html">Carrito</a></li>
+                    <li><a href="sobre.html">Sobre Nosotros</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-titulo">Contacto</h4>
+                <ul class="footer-links">
+                    <li>📍 Bogotá, Colombia</li>
+                    <li>📞 +57 316 780 0764</li>
+                    <li>✉️ info@motogear.co</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 MotoGear Bogotá. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- ===== BOTÓN FLOTANTE WHATSAPP ===== -->
+    <a href="https://api.whatsapp.com/send?phone=573167800764&text=Hola%20MotoGear%2C%20quiero%20saber%20mas%20de%20los%20productos." target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-whatsapp icon-wapp" viewBox="0 0 16 16">
+            <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+        </svg>
+    </a>
+
+    <script src="main.js?v=3" defer></script>
+</body>
+</html>

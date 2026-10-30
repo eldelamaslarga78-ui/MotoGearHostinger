@@ -1,0 +1,6 @@
+# Evita que el navegador use versiones viejas de tus archivos: siempre revalida (si no cambió, responde 304 y es rápido)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|html)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

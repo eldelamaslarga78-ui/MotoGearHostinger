@@ -1,0 +1,166 @@
+
+/* ===== HERO PRODUCTOS ===== */
+/* Banner superior con fondo rojo y texto centrado */
+.hero-productos {
+    padding-top: 100px;
+    background: linear-gradient(135deg, var(--rojo) 0%, #500 100%);
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-productos-texto h1 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.hero-productos-texto p {
+    font-size: 1rem;
+    color: #f0c0c0;
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+/* Sidebar de filtros + grilla de productos en fila */
+.pagina-productos {
+    display: grid;
+    grid-template-columns: 260px 1fr;   /* sidebar fijo + contenido flexible */
+    gap: 30px;
+    padding: 40px 5%;
+    background-color: var(--gris);
+    align-items: start;
+}
+
+/* ===== SIDEBAR FILTROS ===== */
+.filtros {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    position: sticky;        /* se queda fijo al hacer scroll */
+    top: 120px;
+}
+
+/* Título del sidebar */
+.filtros-titulo {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.2rem;
+    color: var(--rojo);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: var(--rojo) solid 2px;
+}
+
+/* Cada grupo de filtros con separación */
+.filtro-grupo {
+    margin-bottom: 24px;
+}
+
+/* Subtítulo del grupo */
+.filtro-subtitulo {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+/* Cada opción de filtro */
+.filtro-opcion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.filtro-opcion:hover {
+    color: var(--rojo);
+}
+
+/* Estilo del radio/checkbox */
+.filtro-opcion input {
+    accent-color: var(--rojo);     /* color del radio/check al seleccionar */
+    cursor: pointer;
+}
+
+/* ===== CATÁLOGO ===== */
+.catalogo {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Barra superior: cantidad de resultados + selector de orden */
+.catalogo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.catalogo-resultado {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Select de ordenamiento */
+.catalogo-orden {
+    padding: 8px 12px;
+    border: 2px solid rgba(136,0,0,0.3);
+    border-radius: 20px;
+    font-family: "Ubuntu", sans-serif;
+    font-size: 0.85rem;
+    color: #444;
+    background: white;
+    cursor: pointer;
+    transition: border 0.3s ease;
+    outline: none;
+}
+
+.catalogo-orden:focus,
+.catalogo-orden:hover {
+    border-color: var(--rojo);
+}
+
+/* ===== RESPONSIVE PRODUCTOS ===== */
+/* Tablet: sidebar encima del catálogo */
+@media (max-width: 900px) {
+    .pagina-productos {
+        grid-template-columns: 1fr;   /* una sola columna */
+    }
+
+    .filtros {
+        position: static;             /* deja de ser sticky */
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);  /* filtros en 2 columnas */
+        gap: 10px 30px;
+    }
+
+    .filtros-titulo {
+        grid-column: 1 / -1;          /* titulo ocupa todo el ancho */
+    }
+}
+
+/* Móvil */
+@media (max-width: 560px) {
+    .filtros {
+        grid-template-columns: 1fr;
+    }
+
+    .catalogo-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}

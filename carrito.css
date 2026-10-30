@@ -1,0 +1,391 @@
+/* ===== HERO CARRITO ===== */
+.hero-carrito {
+    padding-top: 100px;
+    background: linear-gradient(135deg, var(--rojo) 0%, #500 100%);
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-carrito-texto h1 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.hero-carrito-texto p {
+    font-size: 1rem;
+    color: #f0c0c0;
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+/* Items del carrito a la izquierda, resumen a la derecha */
+.pagina-carrito {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 30px;
+    padding: 40px 5%;
+    background-color: var(--gris);
+    align-items: start;
+}
+
+/* ===== LISTA DE ITEMS ===== */
+.carrito-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Encabezado de columnas */
+.carrito-encabezado {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 40px;
+    padding: 12px 20px;
+    background: var(--rojo);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Cada fila de producto */
+.carrito-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 40px;
+    align-items: center;
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: box-shadow 0.3s ease;
+}
+
+.carrito-item:hover {
+    box-shadow: 0 4px 16px rgba(136,0,0,0.12);
+}
+
+/* Imagen + info del producto */
+.item-producto {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.item-producto img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.item-categoria {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--rojo);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.item-nombre {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1rem;
+    color: #222;
+}
+
+.item-talla {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* Precio unitario */
+.item-precio {
+    font-size: 0.95rem;
+    color: #444;
+    font-weight: 500;
+}
+
+/* Controles de cantidad */
+.item-cantidad {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-cantidad {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--rojo);
+    background: transparent;
+    color: var(--rojo);
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-cantidad:hover {
+    background: var(--rojo);
+    color: white;
+}
+
+.cantidad-valor {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #222;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Subtotal por item */
+.item-subtotal {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--rojo);
+    font-family: "Baloo 2", sans-serif;
+}
+
+/* Botón eliminar */
+.btn-eliminar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-eliminar:hover {
+    color: #c00;
+    background: rgba(200,0,0,0.08);
+}
+
+.btn-eliminar svg {
+    fill: currentColor;
+}
+
+/* Enlace volver a productos */
+.seguir-comprando {
+    color: var(--rojo);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 10px 0;
+    transition: color 0.2s ease;
+    width: fit-content;
+}
+
+.seguir-comprando:hover {
+    color: #c00;
+}
+
+/* ===== RESUMEN DEL PEDIDO ===== */
+.carrito-resumen {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.resumen-titulo {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.3rem;
+    color: var(--rojo);
+    padding-bottom: 12px;
+    border-bottom: var(--rojo) solid 2px;
+}
+
+/* Líneas de subtotal, envío, descuento */
+.resumen-linea {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.envio-gratis {
+    color: #2a9d2a;
+    font-weight: 700;
+}
+
+.descuento {
+    color: #e65c00;
+}
+
+/* Campo de cupón */
+.cupon {
+    display: flex;
+    gap: 8px;
+}
+
+.cupon-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid rgba(136,0,0,0.3);
+    border-radius: 20px;
+    font-family: "Ubuntu", sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border 0.3s ease;
+    color: #333;
+}
+
+.cupon-input:focus {
+    border-color: var(--rojo);
+}
+
+.cupon-btn {
+    background: var(--rojo);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-family: "Ubuntu", sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    white-space: nowrap;
+}
+
+.cupon-btn:hover {
+    background: var(--rojo-hover);
+}
+
+/* Total final */
+.resumen-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: rgba(0,0,0,0.1) solid 1px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #222;
+}
+
+.resumen-total span:last-child {
+    color: var(--rojo);
+}
+
+/* Botón checkout */
+.btn-checkout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--rojo);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 25px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    width: 100%;
+}
+
+.btn-checkout svg {
+    fill: white;
+}
+
+.btn-checkout:hover {
+    background: var(--rojo-hover);
+    transform: translateY(-2px);
+}
+
+/* Métodos de pago */
+.metodos-pago {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.metodos-pago span {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.pago-iconos {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pago-badge {
+    background: #f0f0f0;
+    color: #555;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+    .pagina-carrito {
+        grid-template-columns: 1fr;   /* resumen baja debajo de los items */
+    }
+
+    .carrito-resumen {
+        position: static;
+    }
+
+    .carrito-encabezado {
+        display: none;               /* oculta encabezado en tablet/móvil */
+    }
+
+    .carrito-item {
+        grid-template-columns: 1fr;  /* todo en columna */
+        gap: 12px;
+    }
+}
+
+@media (max-width: 560px) {
+    .pagina-carrito {
+        padding: 20px 4%;
+    }
+
+    .item-producto img {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+
+/* ===== Formulario de entrega y confirmación ===== */
+.pedido-form { display: flex; flex-direction: column; gap: 10px; }
+.resumen-subtitulo { font-family: "Baloo 2", sans-serif; color: var(--rojo); font-size: 1rem; }
+.campo { padding: 10px 14px; border: 2px solid rgba(136,0,0,0.3); border-radius: 20px; font-size: 0.85rem; outline: none; color: #333; }
+.campo:focus { border-color: var(--rojo); }
+.btn-checkout:disabled { background: #999; cursor: wait; transform: none; }
+.pedido-ok { background: white; border-radius: 12px; padding: 40px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.pedido-ok h2 { font-family: "Baloo 2", sans-serif; color: var(--rojo); }
+.pedido-ok .btn-checkout { width: auto; padding: 14px 28px; }

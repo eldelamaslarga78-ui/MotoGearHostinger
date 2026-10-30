@@ -1,0 +1,809 @@
+:root {
+    --rojo: #880000;
+    --rojo-hover: #aa0000;
+    --gris: #d4d4d4;
+}
+
+/* ===== RESET GLOBAL ===== */
+/* Elimina márgenes/padding por defecto y unifica box-model en todos los elementos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* ===== BODY ===== */
+/* Fondo con imagen fija (parallax) que cubre toda la pantalla */
+body {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--gris);
+}
+
+/* ===== HEADER ===== */
+/* Barra de navegación fija en la parte superior, siempre visible al hacer scroll */
+header {
+    z-index: 1500;       /* encima de la mayoría de elementos */
+    position: fixed;
+    height: 100px;
+    width: 100%;
+    background-color: rgba(160, 160, 160, 0.9);
+}
+
+/* Contenedor flex del header: alinea logo, menú e iconos en una fila */
+nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    border-top: var(--rojo) solid 12px;
+}
+
+
+.logo {
+    z-index: 1600;
+}
+
+.logo-img {
+    height: 100px;
+    transition: all 0.5s ease;
+}
+
+.logo-img:hover {
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.6));
+}
+
+/* Menú de navegación en fila */
+ul {
+    display: flex;
+    list-style: none;
+}
+
+/* Cada ítem del menú con borde sutil inicial */
+.item-menu {
+    background: var(--rojo);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease;
+    margin-right: 10px;
+}
+
+/* Hover del ítem: borde y sombra rojo, fondo sutil */
+.item-menu:hover {
+    background: var(--rojo-hover);
+}
+
+/* Quita subrayado de todos los enlaces del menu */
+header nav ul li a {
+    color:var(--gris);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* Cada ícono con borde circular y transición */
+.icon {
+    color: var(--rojo);
+    box-sizing: content-box;
+    border-radius: 50%;
+    border: rgba(136, 0, 0, 0.2) solid 2px;
+    padding: 10px;
+    margin-left: 5px;
+    transition: all 0.3s ease;
+    width: 16px;
+    height: 16px;
+}
+
+/* Hover del ícono: mismo estilo que li:hover pero circular */
+.icon:hover {
+    box-shadow: 0px 0px 4px rgb(136, 0, 0);
+    border: var(--rojo) solid 2px;
+    background: rgba(255, 0, 0, 0.048);
+}
+
+/* ===== HAMBURGUESA ===== */
+/* Checkbox siempre invisible (solo controla estado con CSS) */
+.menu-toggle-input {
+    display: none;
+}
+
+/* Ícono de 3 líneas: solo visible en móvil */
+.hamburguesa {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+    z-index: 1600;
+}
+
+.hamburguesa span {
+    display: block;
+    width: 26px;
+    height: 3px;
+    background: var(--rojo);
+    border-radius: 3px;
+    transition: all 0.4s ease;
+}
+
+/* Animación: las 3 líneas se convierten en X al abrir el menú */
+.menu-toggle-input:checked + .hamburguesa span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+.menu-toggle-input:checked + .hamburguesa span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.menu-toggle-input:checked + .hamburguesa span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -6px);
+}
+
+
+
+
+
+/* ===== RESPONSIVE: HEADER ===== */
+@media (max-width: 1100px) {
+
+    /* Header dinámico en móvil */
+    header {
+        height: auto;
+    }
+
+    nav {
+        flex-wrap: wrap;      /* ul baja a la siguiente fila */
+        padding: 10px 20px;
+        margin: 0;
+        min-height: 70px;
+        align-items: center;
+    }
+
+    /* Logo más pequeño */
+    .logo-img {
+        height: 70px;
+        margin-top: auto;
+    }
+
+    /* Ocultar íconos de redes sociales en móvil */
+    .iconos {
+        display: none;
+    }
+
+    /* Mostrar hamburguesa */
+    .hamburguesa {
+        display: flex;
+    }
+
+    /* Menú colapsado por defecto (max-height: 0) */
+    ul {
+        flex-direction: column;
+        flex: 0 0 100%;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+        padding: 0;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Al activar el checkbox: despliega el menú toma altura de 300px*/
+    .menu-toggle-input:checked ~ ul {
+        max-height: 300px;
+        padding-bottom: 10px;
+    }
+
+    li {
+        margin: 4px 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== CARRUSEL ===== */
+/* Ocupa todo el ancho de la pantalla */
+
+.carrusel {
+    width: 100%;
+}
+
+/* Scroll horizontal con scroll-snap: desplaza de slide en slide */
+.carrusel-slides {
+    display: flex;
+    overflow: hidden;            /* el desplazamiento lo controla main.js */
+    touch-action: pan-y;         /* permite swipe horizontal vía JS */
+    scrollbar-width: none;       /* oculta scrollbar en Firefox */
+    -ms-overflow-style: none;    /* oculta scrollbar en IE/Edge */
+}
+
+/* Oculta scrollbar en Chrome/Safari */
+.carrusel-slides::-webkit-scrollbar {
+    display: none;
+}
+
+/* Cada slide: ancho fijo 100% y altura fija */
+.slide {
+    z-index: 20;
+    flex: 0 0 100%;              /* no crece ni se encoge, ocupa exactamente 100% */
+    position: relative;
+    height: 95vh;
+    
+}
+
+/* Imagen que cubre todo el slide */
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Texto superpuesto sobre la imagen del slide */
+.slide-texto {
+    background-color: #7e7e7eb2;
+    padding: 35px;
+    position: absolute;
+    bottom: 150px;
+    left: 150px;
+    text-shadow: 0 2px 8px rgb(0, 0, 0);
+    border-left: 5px solid var(--rojo);
+}
+
+.slide-texto h2 {
+    font-weight: 600;
+    font-size: 2.4rem;
+    font-family: "Baloo 2", sans-serif;
+    color: white;
+}
+
+.slide-texto p {
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: var(--gris);
+    margin: 25px 0px 35px 0px;
+}
+
+/* Botón CTA del slide */
+.btn-slide {
+    background: var(--rojo);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease;
+}
+
+.btn-slide:hover {
+    background: var(--rojo-hover);
+    color: white;
+}
+
+/* Botones prev/next posicionados a los lados del slide */
+.btn-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);  /* centra verticalmente */
+    background: rgba(136, 0, 0, 0.6);
+    color: white;
+    padding: 12px 16px;
+    font-size: 1.2rem;
+    text-decoration: none;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+    z-index: 10;
+    line-height: 1;
+}
+
+.btn-nav:hover {
+    background: rgba(136, 0, 0, 0.9);
+    color: white;
+}
+
+.prev { left: 15px; }
+.next { right: 15px; }
+
+/* Puntos indicadores centrados en la parte inferior del carrusel */
+.indicadores {
+    position: absolute;
+    bottom: 100px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 20;
+}
+
+/* Cada punto: círculo semitransparente */
+.punto {
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.punto:hover {
+    background: var(--rojo);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== PROMOS ===== */
+/* Grid de 2 columnas para las tarjetas promocionales */
+.promos {
+    background-color: var(--gris);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 500px;
+}
+
+
+.card {
+    overflow: hidden;      /* evita que la imagen desborde al hacer zoom */
+    height: 100%;          /* cada carta ocupa toda la altula*/
+    position: relative;    /* necesario para posicionar .info-card absolutamente */
+}
+
+
+
+/* Imagen de la card: cubre el contenedor con leve transparencia inicial */
+.card > img {
+    opacity: 0.8;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 1.5s ease;
+}
+
+
+.card:hover > img {
+    opacity: 1;
+    transform: scale(1.2);  /* zoom 20% */
+}
+
+/* Descripción superpuesta: oculta por defecto, se posiciona en la parte inferior */
+.info-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--gris);
+    opacity: 0;             /*completamente oculta */
+    position: absolute;
+    bottom: 0px;
+    padding: 3%;
+    width: 100%;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    z-index: 1;             /*  asegura que aparezca sobre la imagen */
+    transition: all 0.8s ease;
+}
+.info-card > span{
+    font-size: 2rem;
+    font-family: "Baloo 2", sans-serif;
+    color: rgb(0, 0, 0);
+    margin-bottom: 8px;
+}
+
+.card:hover > .info-card {
+    opacity: 0.9;
+}
+
+
+
+
+/* ===== SECCIÓN PRODUCTOS ===== */
+/* Fondo rojo que contrasta con las tarjetas blancas */
+.seccion-productos {
+    background-color: var(--rojo);
+    padding: 30px 25px;
+}
+
+/* Título centrado de la sección */
+.titulo-seccion {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2rem;
+    color:var(--gris);
+    margin-bottom: 30px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Grid de 3 columnas para las tarjetas de producto */
+.grilla-productos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+/* ===== TARJETA DE PRODUCTO ===== */
+/* Tarjeta blanca con sombra y efecto de elevación en hover */
+.tarjeta {
+    background: var(--gris);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover: sube la tarjeta y aumenta la sombra roja */
+.tarjeta:hover {
+    transform: translateY(-6px);
+}
+
+/* Contenedor de la imagen con altura fija */
+.tarjeta-img {
+    background-color: #fff;
+    position: relative;
+    height: 220px;
+    overflow: hidden;    /* recorta el zoom de la imagen*/
+}
+
+/* Imagen que cubre todo el contenedor */
+.tarjeta-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+/* Zoom sutil en la imagen al hacer hover en la tarjeta */
+.tarjeta:hover .tarjeta-img img {
+    transform: scale(1.05);
+}
+
+/* Badge de etiqueta (Nuevo / Oferta) en la esquina superior */
+.badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--rojo);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* Variante naranja para badges de oferta */
+.badge.oferta {
+    background: #e65c00;
+}
+
+/* Contenido textual de la tarjeta en columna */
+.tarjeta-info {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Etiqueta de categoría en mayúsculas */
+.categoria {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--rojo);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tarjeta-info h3 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    color: #222;
+}
+
+.tarjeta-info p {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Footer de la tarjeta: precio a la izquierda, botón a la derecha */
+.tarjeta-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+/* Precio destacado */
+.precio {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--rojo);
+    font-family: "Baloo 2", sans-serif;
+}
+
+/* Botón agregar al carrito */
+.btn-agregar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--rojo);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    font-family: "Ubuntu", sans-serif;
+}
+
+.btn-agregar svg {
+    fill: white;
+}
+
+.btn-agregar:hover {
+    background: var(--rojo-hover);
+}
+
+/* ===== RESPONSIVE: PRODUCTOS ===== */
+/* Tablet: 2 columnas */
+@media (max-width: 900px) {
+    .grilla-productos {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Móvil: 1 columna */
+@media (max-width: 560px) {
+    .grilla-productos {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+
+/* ===== FOOTER ===== */
+/* Fondo oscuro que contrasta con el resto del sitio */
+footer {
+    background-color: #1a1a1a;
+    border-top: var(--rojo) solid 6px;   /* franja roja igual que .promos */
+    padding: 50px 10% 0px;
+}
+
+/* Grid de 3 columnas para las secciones del footer */
+.footer-contenido {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;  /* columna 1 más ancha para descripción */
+    gap: 40px;
+    padding-bottom: 40px;
+}
+
+/* Nombre de la tienda como logo de texto */
+.footer-logo {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.6rem;
+    color: var(--rojo);
+    margin-bottom: 12px;
+}
+
+/* Descripción breve bajo el logo */
+.footer-desc {
+    font-size: 0.9rem;
+    color: #aaa;
+    line-height: 1.7;
+}
+
+/* Título de cada columna */
+.footer-titulo {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1rem;
+    color: var(--gris);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: var(--rojo) solid 2px;   /* línea roja bajo el título */
+}
+
+/* Lista de links sin estilos por defecto */
+.footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Cada ítem de la lista */
+.footer-links li {
+    font-size: 0.9rem;
+    color: #aaa;
+    border: none;              /* sobreescribe el border de li del nav */
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    transition: color 0.3s ease;
+}
+
+/* Links del footer */
+.footer-links a {
+    color: #aaa;
+    font-weight: 400;
+    transition: color 0.3s ease;
+}
+
+/* Hover: cambia a rojo */
+.footer-links a:hover,
+.footer-links li:hover {
+    color: #c00;
+    cursor: pointer;
+    background: none;          /* sobreescribe hover del li del nav */
+    box-shadow: none;
+    border: none;
+}
+
+/* Línea de copyright separada del contenido */
+.footer-bottom {
+    border-top: rgba(255, 255, 255, 0.1) solid 1px;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer-bottom p {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.icon-wapp {
+    z-index: 1600;
+    opacity: 0.8;
+    background-color: #25d366;
+    color: #f0f0f0;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    border-radius: 25%;
+    padding: 10px;
+    box-shadow: 0px 0px 35px #25D366;
+    transition: all 0.8s ease;
+}
+
+.icon-wapp:hover {
+    opacity: 1;
+    cursor: pointer;
+    box-shadow: 0px 0px 10px #25D366;
+    background: #25d366;
+}
+
+/* ===== RESPONSIVE: FOOTER ===== */
+/* Tablet: 2 columnas */
+@media (max-width: 900px) {
+    .footer-contenido {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Móvil: 1 columna */
+@media (max-width: 560px) {
+    footer {
+        padding: 40px 5% 0px;
+    }
+
+    .footer-contenido {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
+
+
+/* =====================================================
+   MEJORAS (optimización)
+   ===================================================== */
+html { scroll-behavior: smooth; }
+img { max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+[hidden] { display: none !important; }   /* necesario para los filtros de productos */
+
+/* Accesibilidad: foco visible en teclado */
+:focus-visible { outline: 3px solid var(--rojo-hover); outline-offset: 3px; }
+
+/* Insignia con cantidad de items en el menú */
+.cart-badge {
+    display: inline-block;
+    margin-left: 6px;
+    min-width: 20px;
+    padding: 1px 6px;
+    background: white;
+    color: var(--rojo);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Aviso flotante */
+.toast {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    left: 15%;
+    bottom: 4%;
+    transform: translate(-50%, 25px);
+    background: #ff9999;
+    color: var(--rojo);
+    padding: 12px 22px;
+    border-radius: 15px;
+    border: 5px solid var(--rojo);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.8s ease;
+    z-index: 2000;
+    width: 26%;
+    height: 13%;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0px); }
+
+.carrito-vacio { background: white; padding: 40px 20px; border-radius: 12px; text-align: center; color: #666; }
+
+/* Carrusel: texto adaptable en pantallas pequeñas (antes left:150px rompía el móvil) */
+@media (max-width: 900px) {
+    .slide { height: 70vh; }
+    .slide-texto { left: 5%; right: 5%; bottom: 80px; padding: 20px; }
+    .slide-texto h2 { font-size: 1.6rem; }
+    .slide-texto p { font-size: 1rem; margin: 12px 0 20px; }
+    .indicadores { bottom: 40px; }
+    .promos { grid-template-columns: 1fr; height: auto; }
+    .card { height: 250px; }
+}
+
+/* Respeta a quien prefiere menos animación */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Botones del carrusel (ahora <button>) */
+.btn-nav, .punto { border: none; cursor: pointer; font-family: inherit; }
+.punto.activo { background: var(--rojo); transform: scale(1.25); }
+
+
+/* ===== Toast: verde (éxito) / rojo (error) y adaptable a móvil ===== */
+.toast.ok { background: #1e7e34; border-color: #14532d; color: #fff; }
+.toast.error { background: #c62828; border-color: #7f1d1d; color: #fff; }
+@media (max-width: 700px) {
+    .toast { left: 50%; width: 90%; height: auto; bottom: 20px; }
+}
+
+/* ===== Tienda conectada a la base de datos ===== */
+.talla { padding: 6px 10px; border: 2px solid rgba(136,0,0,0.3); border-radius: 20px; background: white; font-size: 0.85rem; width: fit-content; cursor: pointer; }
+.btn-agregar:disabled { background: #999; cursor: not-allowed; }
+.badge.agotado { background: #444; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.quedan { font-size: 0.8rem; font-weight: 700; color: #c62828; }

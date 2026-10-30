@@ -1,0 +1,18 @@
+RewriteEngine On
+
+# 1. Eliminar la extensión .html de la URL de forma interna
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^([^\.]+)$ $1.html [NC,L]
+
+# 2. Redirigir de forma externa si alguien escribe .html manualmente
+RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
+RewriteRule ^ %1 [R=301,L]
+
+
+# Evita que el navegador use versiones viejas de tus archivos: siempre revalida (si no cambió, responde 304 y es rápido)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|html)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

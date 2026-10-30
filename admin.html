@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Administración - MotoGear Bogotá</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css?v=5">
+</head>
+<body>
+
+<section id="login" class="login">
+    <form id="login-form" class="caja">
+        <h1>Panel MotoGear</h1>
+        <label>Usuario <input id="usuario" autocomplete="username" required></label>
+        <label>Contraseña <input type="password" id="clave" autocomplete="current-password" required></label>
+        <button class="btn" type="submit">Entrar</button>
+    </form>
+</section>
+
+<div id="panel" hidden>
+    <header class="barra">
+        <h1>Administración</h1>
+        <nav class="tabs">
+            <button class="tab activo" data-tab="pedidos">Pedidos <span id="n-ped" class="etiqueta"></span></button>
+            <button class="tab" data-tab="productos">Productos</button>
+            <button class="tab" data-tab="categorias">Categorías</button>
+            <button class="tab" data-tab="cupones">Cupones</button>
+            <button class="tab" data-tab="mensajes">Mensajes</button>
+            <button class="tab" data-tab="cuenta">Cuenta</button>
+        </nav>
+        <a href="index.html" class="btn sec">Ver tienda</a>
+        <button id="salir" class="btn sec">Salir</button>
+    </header>
+
+    <main>
+        <section id="tab-pedidos" class="vista"><div id="lista-ped"></div></section>
+
+        <section id="tab-productos" class="vista" hidden>
+            <form id="form-prod" class="caja grid">
+                <h2 id="prod-titulo">Nuevo producto</h2>
+                <input type="hidden" id="p-id">
+                <label>Nombre <input id="p-nombre" required maxlength="120"></label>
+                <label>Categoría <select id="p-cat" required></select></label>
+                <label>Marca <input id="p-marca" placeholder="Nolan, LS2…" maxlength="60"></label>
+                <label>Precio (COP) <input id="p-precio" type="number" step="1000" required></label>
+                <label class="check ancho"><input type="checkbox" id="p-sintalla"> Este producto no maneja tallas (un solo stock)</label>
+                <label id="wrap-stock" class="ancho" hidden>Stock (unidades) <input id="p-stock" type="number" min="0" value="0"></label>
+                <div id="wrap-tallas" class="ancho tallas-ed">
+                    <strong>Stock por talla</strong>
+                    <div id="tallas-rows"></div>
+                    <div class="acciones">
+                        <button type="button" class="btn sec mini" id="t-add">+ Agregar talla</button>
+                        <button type="button" class="btn sec mini" id="t-preset">Cargar S, M, L, XL</button>
+                    </div>
+                </div>
+                <label class="ancho">Descripción <input id="p-desc" maxlength="255"></label>
+                <label>Imagen (ruta) <input id="p-img" placeholder="./img/productos/casco.webp" required></label>
+                <label>Subir imagen (se convierte a .webp) <input type="file" id="p-file" accept="image/*"></label>
+                <label>Etiqueta <input id="p-badge" placeholder="Nuevo, -20%…" maxlength="20"></label>
+                <label>Tipo de etiqueta
+                    <select id="p-badgeTipo"><option value="">Normal (rojo)</option><option value="oferta">Oferta (naranja)</option></select>
+                </label>
+                <label class="check"><input type="checkbox" id="p-dest"> Mostrar en “Más vendidos”</label>
+                <label class="check"><input type="checkbox" id="p-activo" checked> Visible en la tienda</label>
+                <div class="acciones ancho">
+                    <button class="btn" type="submit">Guardar producto</button>
+                    <button class="btn sec" type="button" id="p-cancel">Cancelar</button>
+                </div>
+            </form>
+            <div class="tabla-wrap"><table class="tabla" id="tabla-prod"></table></div>
+        </section>
+
+        <section id="tab-categorias" class="vista" hidden>
+            <form id="form-cat" class="caja fila">
+                <label>Nueva categoría <input id="c-nombre" required placeholder="Ej: Botas" maxlength="60"></label>
+                <button class="btn" type="submit">Agregar</button>
+            </form>
+            <div class="tabla-wrap"><table class="tabla" id="tabla-cat"></table></div>
+        </section>
+
+        <section id="tab-cupones" class="vista" hidden>
+            <form id="form-cup" class="caja fila">
+                <label>Código <input id="k-codigo" required placeholder="MOTO10" maxlength="30"></label>
+                <label>Descuento (%) <input id="k-pct" type="number" min="1" max="100" required></label>
+                <label>Vence (opcional) <input id="k-vence" type="date"></label>
+                <label>Compra mínima <input id="k-min" type="number" min="0" step="1000" value="0"></label>
+                <label>Usos máximos (opcional) <input id="k-max" type="number" min="1"></label>
+                <button class="btn" type="submit">Guardar cupón</button>
+            </form>
+            <div class="tabla-wrap"><table class="tabla" id="tabla-cup"></table></div>
+        </section>
+
+        <section id="tab-mensajes" class="vista" hidden><div id="lista-msg"></div></section>
+
+        <section id="tab-cuenta" class="vista" hidden>
+            <form id="form-clave" class="caja grid">
+                <h2>Cambiar contraseña</h2>
+                <label>Contraseña actual <input type="password" id="clave-act" autocomplete="current-password" required></label>
+                <label>Nueva contraseña (mín. 10) <input type="password" id="clave-nueva" minlength="10" autocomplete="new-password" required></label>
+                <div class="acciones ancho"><button class="btn" type="submit">Actualizar</button></div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" hidden>
+    <div class="modal-caja">
+        <h2 class="modal-titulo" id="modal-titulo">Confirma el producto</h2>
+        <div id="modal-cuerpo"></div>
+        <div class="acciones modal-pie">
+            <button type="button" class="btn" id="m-ok">Confirmar y guardar</button>
+            <button type="button" class="btn sec" id="m-no">Volver a editar</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<script src="admin.js?v=5"></script>
+</body>
+</html>

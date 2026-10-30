@@ -1,0 +1,251 @@
+/* ===== HERO CONTACTO ===== */
+.hero-contacto {
+    padding-top: 100px;
+    background: linear-gradient(135deg, var(--rojo) 0%, #500 100%);
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-contacto-texto h1 {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.hero-contacto-texto p {
+    font-size: 1rem;
+    color: #f0c0c0;
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+/* Formulario a la izquierda, info a la derecha */
+.pagina-contacto {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 30px;
+    padding: 40px 5%;
+    background-color: var(--gris);
+    align-items: start;
+}
+
+/* ===== FORMULARIO ===== */
+.contacto-form-wrap {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* Subtítulo de sección */
+.contacto-subtitulo {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.3rem;
+    color: var(--rojo);
+    margin-bottom: 24px;
+    padding-bottom: 10px;
+    border-bottom: var(--rojo) solid 2px;
+}
+
+.contacto-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Fila de 2 campos */
+.form-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Cada campo con su label */
+.form-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-grupo label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+}
+
+/* Estilo unificado para input, select y textarea */
+.contacto-form input,
+.contacto-form select,
+.contacto-form textarea {
+    padding: 12px 16px;
+    border: 2px solid rgba(136,0,0,0.2);
+    border-radius: 10px;
+    font-family: "Ubuntu", sans-serif;
+    font-size: 0.9rem;
+    color: #333;
+    background: #fafafa;
+    outline: none;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+    resize: none;               /* evita que el textarea sea redimensionable */
+}
+
+/* Focus: resalta con borde rojo */
+.contacto-form input:focus,
+.contacto-form select:focus,
+.contacto-form textarea:focus {
+    border-color: var(--rojo);
+    box-shadow: 0 0 0 3px rgba(136,0,0,0.08);
+    background: white;
+}
+
+/* Botón enviar */
+.btn-enviar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--rojo);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 25px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    width: 100%;
+}
+
+.btn-enviar svg {
+    fill: white;
+}
+
+.btn-enviar:hover {
+    background: var(--rojo-hover);
+    transform: translateY(-2px);
+}
+
+/* ===== PANEL DE INFORMACIÓN ===== */
+.contacto-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 120px;
+}
+
+/* Cada bloque de información */
+.info-bloque {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* Fila de cada dato de contacto */
+.info-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Emoji/icono del dato */
+.info-icono {
+    font-size: 1.3rem;
+    width: 36px;
+    height: 36px;
+    background: rgba(136,0,0,0.08);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.info-item strong {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--rojo);
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-item p {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
+}
+
+/* Redes sociales */
+.redes-contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Cada enlace de red social */
+.red-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #444;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(136,0,0,0.15);
+}
+
+.red-item svg {
+    fill: var(--rojo);
+    flex-shrink: 0;
+}
+
+.red-item:hover {
+    background: rgba(136,0,0,0.06);
+    border-color: var(--rojo);
+    color: var(--rojo);
+}
+
+/* Mapa */
+.mapa-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+    .pagina-contacto {
+        grid-template-columns: 1fr;
+    }
+
+    .contacto-info {
+        position: static;
+    }
+
+    .form-fila {
+        grid-template-columns: 1fr;   /* campos en columna en móvil */
+    }
+}
+
+@media (max-width: 560px) {
+    .pagina-contacto {
+        padding: 20px 4%;
+    }
+
+    .contacto-form-wrap {
+        padding: 20px;
+    }
+}
