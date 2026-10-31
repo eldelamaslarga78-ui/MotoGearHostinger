@@ -32,14 +32,52 @@
 - `POST ?r=pedido` ya valida stock, aplica cupón, descuenta inventario y registra `movimientos_stock` y `pedido_eventos`.
 - `POST ?r=pedido_estado` cambia el estado sin máquina de estados; debe reemplazarse.
 - `GET ?r=admin` devuelve pedidos y mensajes al panel.
-- Tablas `pedidos`, `pedido_items`, `pedido_eventos`, `pagos`, `envios`, `transportadoras`, `facturas`, `zonas_*` y `tarifas_envio` ya existen.
+- `pedidos` y `pedido_items`: heredadas, con datos y columnas viejas (ver sección 3).
+- `pagos`, `envios`, `transportadoras`, `facturas` y zonas: **no existen en producción**; las crea la migración `003`.
+- `pedido_eventos` ya existe desde la Fase 0.
 
 ## 3. Modelo de datos
 
-Sin tablas nuevas. Se añade la clave de consecutivo de factura:
+**Aviso:** `pedidos` y `pedido_items` son tablas heredadas con datos y columnas viejas. La migración `003_pedidos.sql` no parte de cero: amplía lo existente y crea las tablas que faltan.
+
+### 3.1 Columnas nuevas en `pedidos`
+
+| Columna nueva | Origen / regla |
+|---|---|
+| `cliente_id` | Buscar/crear en `clientes` por email o teléfono |
+| `idempotencia` | `NULL` en históricos; UUID en pedidos nuevos |
+| `cliente_nombre` | `cliente` |
+| `cliente_email` | `email` |
+| `cliente_tel` | `telefono` |
+| `envio_departamento` | `''` (no existe en la tabla vieja) |
+| `envio_ciudad` | `ciudad` |
+| `envio_direccion` | `direccion` |
+| `envio_indicaciones` | `''` |
+| `costo_envio` | `0` |
+| `impuestos` | `0` |
+| `cupon_codigo` | `cupon` |
+| `pago_estado` | `'pendiente'` |
+| `metodo_pago` | `'contraentrega'` |
+| `expira_pago` | `NULL` en históricos; `NOW() + 2 h` en nuevos |
+| `notas_cliente` | `notas` |
+| `notas_internas` | `NULL` |
+| `user_agent` | `''` |
+| `entregado_en` | `creado` si `estado = 'entregado'` |
+
+**Mapa de estados:** `nuevo → pendiente_pago`; `confirmado`, `enviado`, `entregado` y `cancelado` se conservan. Después se amplía el `ENUM` con `en_preparacion` y `devuelto`.
+
+### 3.2 Columnas nuevas en `pedido_items`
+
+`costo` (0), `descuento` (0) y `total_linea` (`precio × cantidad`). `variante_id`, `sku` y `color` ya existen.
+
+### 3.3 Tablas que crea la migración
+
+`pagos`, `transportadoras`, `envios`, `zonas_envio`, `zonas_cobertura`, `tarifas_envio`, `facturas` y `clientes` (necesaria para `pedidos.cliente_id`). El DDL exacto está en `sql/schema.sql` § 1.3.3 y § 1.3.5–1.3.7. `cliente_direcciones` se crea en la Fase 4.
+
+### 3.4 Consecutivo de factura
 
 ```sql
--- sql/migraciones/003_pedidos.sql
+-- sql/migraciones/003_pedidos.sql (fragmento)
 INSERT INTO configuracion (clave, valor, tipo, grupo, es_publico)
 VALUES ('factura_consecutivo', '0', 'numero', 'facturacion', 0)
 ON DUPLICATE KEY UPDATE clave = clave;
@@ -49,7 +87,7 @@ ON DUPLICATE KEY UPDATE clave = clave;
 |---|---|
 | `pedidos` | Estado, pago, totales, `idempotencia`, `expira_pago` |
 | `pedido_items` | Snapshots de nombre, SKU, talla, color, precio y costo |
-| `pedido_eventos` | Historial inmutable de transiciones |
+| `pedido_eventos` | Historial inmutable de transiciones (ya existe) |
 | `pagos` | Registro manual o de pasarela |
 | `envios`, `transportadoras` | Guía y tracking |
 | `facturas` | Numeración interna |

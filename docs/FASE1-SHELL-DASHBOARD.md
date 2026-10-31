@@ -33,25 +33,42 @@
 - `admin.html` + `admin.js`: panel de una sola página con pestañas `pedidos`, `productos`, `categorias`, `cupones`, `mensajes`, `cuenta`.
 - API única `api/api.php?r=…` con casos `catalogo`, `pedido`, `login`, `me`, `logout`, `admin`, `guardar`, `borrar`, `producto`, `categoria`, `cupon`, `mensaje`, `pedido_estado`, `upload`, `clave`.
 - RBAC ya operativo (`puede()`, `admin()`, `auditar()`).
-- Tablas `kpi_snapshots`, `cache_kv`, `visitas`, `notificaciones` y vista `v_stock_bajo` ya existen en `sql/schema.sql`.
+- Tablas `kpi_snapshots`, `cache_kv`, `visitas`, `notificaciones` y vista `v_stock_bajo` **definidas** en `sql/schema.sql`, pero **aún no creadas en producción** (ver sección 3).
 
 **Regla de convivencia:** `admin.html` sigue publicado y funcionando. El shell nuevo vive en `admin/` y se cambia el enlace cuando alcance paridad en Fase 3. Nada de big-bang.
 
 ## 3. Modelo de datos
 
-No hay DDL nuevo. Se usan:
+**Prerrequisito real:** la Fase 0 solo creó `variantes`, `movimientos_stock`, `pedido_eventos`, `configuracion` y las tablas de seguridad. Las tablas y la vista que el dashboard necesita **no existen todavía en producción**. Se crean con:
 
-| Tabla | Uso en la fase |
-|---|---|
-| `kpi_snapshots` | Un registro por día cerrado (fuente histórica) |
-| `cache_kv` | Caché de 60 s para el rango en curso |
-| `visitas` | Base del cálculo de conversión |
-| `notificaciones` | Bandeja interna |
-| `v_stock_bajo` | Alerta de reposición |
-| `pedidos`, `pedido_items` | Ingresos, ticket y estados |
-| `mensajes` | Alerta de mensajes sin responder |
+```
+sql/migraciones/001_fase1_dashboard.sql   (idempotente)
+sql/verificar_fase1.sql                   (todas las filas deben dar OK)
+```
 
-Índices que ya cubren las consultas: `idx_ped_estado (estado, creado)`, `idx_ped_fecha (creado)`, `idx_not_usr (usuario_id, leida, creado)`, `idx_vis_fecha (fecha)`.
+| Objeto | Tipo | Uso en la fase |
+|---|---|---|
+| `kpi_snapshots` | tabla nueva | Un registro por día cerrado |
+| `cache_kv` | tabla nueva | Caché de 60 s del rango en curso |
+| `visitas` | tabla nueva | Base del cálculo de conversión |
+| `notificaciones` | tabla nueva | Bandeja interna |
+| `v_stock_bajo` | vista nueva | Alerta de reposición |
+| `pedidos`, `pedido_items` | tablas heredadas | Ingresos, ticket y estados |
+| `mensajes` | tabla heredada | Alerta de mensajes sin responder |
+
+La migración también crea, si faltan, los índices `pedidos.idx_ped_fecha (creado)` y `pedidos.idx_ped_estado (estado, creado)`, y sube `configuracion.schema_version` a `2`.
+
+### Estados heredados de `pedidos`
+
+Hoy `pedidos.estado` usa `nuevo`, `confirmado`, `enviado`, `entregado` y `cancelado`. La Fase 3 los migrará al enum nuevo (`pendiente_pago`, `en_preparacion`, `devuelto`). Mientras tanto, todo el cálculo debe centralizarse en una función de mapeo:
+
+| Concepto | Valores heredados | Valores nuevos (post Fase 3) |
+|---|---|---|
+| Venta confirmada (ingresos) | `confirmado`, `enviado`, `entregado` | `confirmado`, `en_preparacion`, `enviado`, `entregado` |
+| Por despachar | `nuevo`, `confirmado` | `confirmado`, `en_preparacion` |
+| Cancelado (excluido) | `cancelado` | `cancelado` |
+
+Nunca dupliques esta lógica en las vistas: vive en `api/src/Metricas.php`.
 
 ## 4. Backend
 
@@ -72,7 +89,8 @@ No hay DDL nuevo. Se usan:
 - Periodos: hoy, 7 días, 30 días, mes actual y personalizado.
 - Comparación: mismo número de días inmediatamente anterior.
 - Conversión = pedidos ÷ visitas del periodo. Si no hay visitas, se muestra `—`, no `0 %`.
-- "Por despachar" = pedidos en `confirmado` o `en_preparacion`.
+- "Por despachar" usa el mapeo de estados heredados de la sección 3.
+- "Ingresos" solo suma ventas confirmadas; los pedidos `nuevo`/`pendiente_pago` no cuentan como ingreso.
 - Días cerrados: se leen de `kpi_snapshots`. Rango en curso: consulta en vivo + caché 60 s en `cache_kv`.
 - Si el snapshot de ayer no existe, el endpoint lo calcula al vuelo y lo guarda (auto-reparación).
 
@@ -139,6 +157,7 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 6. El contador de notificaciones baja al marcarlas como leídas.
 7. Funciona en móvil (lectura) y con teclado; sin errores de consola ni de CSP.
 8. El cron deja `kpi_snapshots` del día anterior y limpia `cache_kv` vencida.
+9. `sql/verificar_fase1.sql` devuelve `OK` en las 11 comprobaciones.
 
 ## 9. Pruebas
 
@@ -165,6 +184,7 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 
 ## 11. Despliegue
 
+0. **Antes de codificar:** ejecutar `sql/migraciones/001_fase1_dashboard.sql` en phpMyAdmin y comprobar con `sql/verificar_fase1.sql` que todo devuelve `OK`.
 1. Subir `api/src/`, `cron/` y `admin/`.
 2. Crear el token del cron en `config.local.php` (`CRON_TOKEN`).
 3. Programar en hPanel: `php /home/uXXXX/cron/cron.php` cada 10 min.
@@ -175,4 +195,4 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 
 ## 12. Definición de terminado
 
-`php -l` sin errores, flujos críticos probados en móvil, backup restaurado en entorno de prueba y los 8 criterios de aceptación cumplidos.
+`php -l` sin errores, flujos críticos probados en móvil, backup restaurado en entorno de prueba y los 9 criterios de aceptación cumplidos.

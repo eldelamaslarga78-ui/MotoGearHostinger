@@ -30,12 +30,13 @@
 
 - `POST ?r=cupon` valida un cupón básico en el checkout.
 - Cupones ya tienen `tipo`, `valor`, `minimo`, `desde`, `vence`, `usos_max`, `max_por_cliente`, `primera_compra`, `acumulable`.
-- Tablas `promociones`, `promocion_items`, `carritos`, `carrito_items`, `cupon_usos` ya existen.
+- `cupones` existe (heredada) con casi todos los campos.
+- `cupon_usos`, `promociones`, `promocion_items`, `carritos` y `carrito_items` **no existen todavía**; las crea la migración `005`.
 - El pedido se recalcula en servidor; el cliente nunca fija precios.
 
 ## 3. Modelo de datos
 
-Sin tablas nuevas. Ajuste de configuración:
+La migración `005` crea `cupon_usos`, `promociones`, `promocion_items`, `carritos` y `carrito_items` (DDL en `sql/schema.sql` § 1.3.8) y ajusta la configuración:
 
 ```sql
 -- sql/migraciones/005_marketing.sql

@@ -27,7 +27,7 @@
 
 ## 2. Punto de partida
 
-- `pagos` ya tiene `pasarela`, `referencia_externa`, `estado`, `monto`, `payload` y la clave única `uq_pago_ref (pasarela, referencia_externa)`.
+- `pagos` la crea la migración `003` (Fase 3) con `pasarela`, `referencia_externa`, `estado`, `monto`, `payload` y la clave única `uq_pago_ref (pasarela, referencia_externa)`.
 - `pedidos.pago_estado` y `metodo_pago` existen; el pago manual de Fase 3 sigue funcionando.
 - `usuarios` ya tiene `totp_secreto`, `totp_activo`, `bloqueado_hasta` y `ultimo_acceso`.
 - `auditoria` registra cambios con `cambios` en JSON.

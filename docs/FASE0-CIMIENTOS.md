@@ -33,7 +33,7 @@
 |---|---|
 | `variantes` | Stock por talla/color con SKU propio y `stock_minimo` |
 | `movimientos_stock` | Toda alteración de stock, con `stock_despues` |
-| `v_stock_bajo` | Alertas de reposición |
+| `v_stock_bajo` | Alertas de reposición (la vista se crea en la migración `001` de la Fase 1) |
 | `roles`, `permisos`, `rol_permisos` | RBAC |
 | `usuarios` | Reemplaza a `admins`; conserva `clave_hash` |
 | `auditoria` | Quién cambió qué, con `cambios` en JSON |
@@ -81,6 +81,7 @@ Dos bugs reales corregidos: FK con signo distinto (`INT` vs `INT UNSIGNED`) y co
 1. **Rotar la contraseña de MySQL** en hPanel y actualizar `config.local.php`. Obligatorio: GitHub aún sirve por SHA los commits antiguos con la clave.
 2. Borrar `%TEMP%\opencode\motogear-pre-scrub.bundle` cuando ya no se necesite la historia antigua.
 3. Revisar que no existan copias del repositorio con la historia anterior.
+4. **Aplicar `sql/migraciones/001_fase1_dashboard.sql`** antes de la Fase 1: la Fase 0 no creó `kpi_snapshots`, `cache_kv`, `visitas`, `notificaciones` ni `v_stock_bajo`.
 
 ## 9. Deuda técnica asumida
 

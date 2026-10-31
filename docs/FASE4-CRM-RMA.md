@@ -28,13 +28,14 @@
 ## 2. Punto de partida
 
 - Al crear un pedido, el servidor crea o reutiliza el cliente por email o teléfono.
-- `clientes`, `cliente_direcciones`, `devoluciones`, `devolucion_items` ya existen.
+- `clientes` existe desde la Fase 3 (vínculo `pedidos.cliente_id`).
+- `cliente_direcciones`, `devoluciones` y `devolucion_items` **no existen todavía**; las crea la migración `004`.
 - `pedidos.entregado_en` y los estados llegan desde Fase 3.
 - Permisos `clientes.ver` y `devoluciones.ver` ya existen.
 
 ## 3. Modelo de datos
 
-Sin tablas nuevas. Migración de datos y de contadores:
+La migración `004` crea `cliente_direcciones`, `devoluciones` y `devolucion_items` (DDL en `sql/schema.sql` § 1.3.3 y § 1.3.9) y recalcula los contadores de `clientes`:
 
 ```sql
 -- sql/migraciones/004_crm_rma.sql

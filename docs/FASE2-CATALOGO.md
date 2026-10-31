@@ -32,16 +32,27 @@
 - `POST ?r=guardar` tipo `producto` crea producto + variantes en una sola operación.
 - `POST ?r=borrar` tipo `producto` archiva si hay pedidos y borra si no.
 - `POST ?r=upload` valida imagen (4 MB), la redimensiona a 1200 px y la guarda como un único WebP en `img/productos/`.
-- `variantes` ya tiene `sku`, `color`, `color_hex`, `precio_extra`, `stock`, `stock_minimo`, `activo`.
-- `movimientos_stock` y `v_stock_bajo` ya existen.
+- `variantes`, `movimientos_stock` y `v_stock_bajo` existen desde la Fase 0/1.
 
 ## 3. Modelo de datos
 
-Sin tablas nuevas. Se completan columnas y se crea una migración de datos:
+La Fase 0 no creó `producto_imagenes`: la migración de esta fase la crea y luego migra la imagen principal.
 
 ```sql
 -- sql/migraciones/002_catalogo.sql
--- 1. Imagen principal actual -> producto_imagenes
+-- 1. Tabla de multimedia (no existe en producción)
+CREATE TABLE IF NOT EXISTS producto_imagenes (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  producto_id INT UNSIGNED NOT NULL,
+  ruta        VARCHAR(255) NOT NULL,
+  alt         VARCHAR(160) NOT NULL DEFAULT '',
+  orden       TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  principal   TINYINT(1) NOT NULL DEFAULT 0,
+  CONSTRAINT fk_img_prod FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+  KEY idx_img_prod (producto_id, orden)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Imagen principal actual -> producto_imagenes
 INSERT INTO producto_imagenes (producto_id, ruta, alt, orden, principal)
 SELECT p.id, p.img, p.nombre, 0, 1
 FROM productos p
@@ -49,7 +60,7 @@ WHERE p.img <> '' AND NOT EXISTS (
   SELECT 1 FROM producto_imagenes i WHERE i.producto_id = p.id
 );
 
--- 2. SKU faltantes en variantes
+-- 3. SKU faltantes en variantes
 UPDATE variantes SET sku = CONCAT('MG-VAR-', id) WHERE sku = '' OR sku IS NULL;
 ```
 

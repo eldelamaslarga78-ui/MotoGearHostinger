@@ -24,6 +24,7 @@
 
 ## Estado de despliegue
 
-- Repositorio: `main` en `79fa927`, sincronizado con GitHub y con producción.
+- Repositorio: `main` sincronizado con GitHub y con producción (última revisión de documentación incluida).
 - Fase 0 desplegada y verificada.
+- **Antes de la Fase 1:** ejecutar `sql/migraciones/001_fase1_dashboard.sql` y comprobar con `sql/verificar_fase1.sql`. La Fase 0 no creó las tablas del dashboard.
 - Pendiente crítico: **rotar la contraseña de MySQL** y actualizar `config.local.php`.
