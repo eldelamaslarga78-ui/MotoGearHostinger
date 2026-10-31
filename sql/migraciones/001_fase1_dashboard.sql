@@ -2,7 +2,10 @@
 -- Fase 1 · Dashboard
 -- Crea los objetos que la Fase 0 no creó y que el dashboard necesita.
 -- Idempotente: se puede ejecutar varias veces sin error.
--- Ejecutar en phpMyAdmin sobre la base de datos de la tienda.
+--
+-- IMPORTANTE: en phpMyAdmin selecciona primero la BASE DE DATOS DE LA TIENDA
+-- en la barra izquierda. Si arriba aparece "information_schema", el script
+-- fallará: ahí no se pueden crear tablas.
 -- ============================================================================
 
 SET NAMES utf8mb4;

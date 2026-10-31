@@ -184,7 +184,7 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 
 ## 11. Despliegue
 
-0. **Antes de codificar:** ejecutar `sql/migraciones/001_fase1_dashboard.sql` en phpMyAdmin y comprobar con `sql/verificar_fase1.sql` que todo devuelve `OK`.
+0. **Antes de codificar:** en phpMyAdmin selecciona la base de datos de la tienda (no `information_schema`), ejecuta `sql/migraciones/001_fase1_dashboard.sql` y comprueba con `sql/verificar_fase1.sql`. La primera fila debe mostrar la base correcta y las 11 comprobaciones deben dar `OK`.
 1. Subir `api/src/`, `cron/` y `admin/`.
 2. Crear el token del cron en `config.local.php` (`CRON_TOKEN`).
 3. Programar en hPanel: `php /home/uXXXX/cron/cron.php` cada 10 min.
