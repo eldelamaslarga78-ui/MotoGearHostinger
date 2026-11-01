@@ -381,7 +381,7 @@ kbd {
    Solo aparece con ?diagnostico=1 (panel flotante con las llamadas a la API).
    Va al final para no mezclarse con los estilos de la interfaz. */
 .diag {
-  position: fixed; right: 14px; bottom: 14px; z-index: 9999; width: min(440px, 94vw); max-height: 46vh;
+  position: fixed; right: 14px; bottom: 14px; z-index: 9999; width: min(800px, 94vw); max-height: 50vh;
   display: flex; flex-direction: column; overflow: hidden;
   background: #14181d; color: #e8ebee; border-radius: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .74rem;
