@@ -37,6 +37,7 @@ date_default_timezone_set('America/Bogota');
 require __DIR__ . '/../api/src/Conexion.php';
 require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Metricas.php';
+require __DIR__ . '/../api/src/Pedidos.php';
 
 $inicio = microtime(true);
 
@@ -45,13 +46,15 @@ try {
     $cache     = cache_limpiar();
     $visitas   = db()->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
     $notifs    = db()->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
+    $expirados = ped_expirar_pendientes();
 
     printf(
-        "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d %.0fms\n",
+        "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d expirados=%d %.0fms\n",
         $snapshots,
         $cache,
         (int)$visitas,
         (int)$notifs,
+        $expirados,
         (microtime(true) - $inicio) * 1000
     );
 } catch (Throwable $e) {

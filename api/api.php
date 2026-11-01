@@ -4,6 +4,7 @@ require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
 require __DIR__ . '/src/Catalogo.php';
+require __DIR__ . '/src/Pedidos.php';
 
 class UserError extends Exception {}
 function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }
@@ -97,6 +98,16 @@ try {
         foreach ($items as $it) req(is_array($it), 'Carrito no válido');
 
         $pdo = db();
+
+        // Idempotencia: un reintento con la misma clave devuelve el pedido ya creado.
+        $idem = substr((string)($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''), 0, 36);
+        if ($idem !== '') {
+            $q = $pdo->prepare('SELECT id, total FROM pedidos WHERE idempotencia = ?');
+            $q->execute([$idem]);
+            $ex = $q->fetch();
+            if ($ex) out(['id' => (int)$ex['id'], 'total' => (int)$ex['total'], 'repetido' => true]);
+        }
+
         $q = $pdo->prepare('SELECT COUNT(*) FROM pedidos WHERE ip=? AND creado > NOW() - INTERVAL 1 HOUR');
         $q->execute([$ip]);
         req((int)$q->fetchColumn() < 10, 'Demasiados pedidos seguidos. Intenta más tarde');
@@ -153,11 +164,17 @@ try {
             $total = $sub - $descuento;
 
             // 4. Pedido
-            $pdo->prepare('INSERT INTO pedidos (cliente,telefono,email,ciudad,direccion,notas,subtotal,descuento,cupon,total,ip) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-                ->execute([$nombre, $tel, $mail, $ciudad, $dir, $notas, $sub, $descuento, $cup ? $cup['codigo'] : null, $total, $ip]);
+            $pdo->prepare('INSERT INTO pedidos
+                    (cliente, telefono, email, ciudad, direccion, notas, subtotal, descuento, cupon, total, ip,
+                     cliente_nombre, cliente_email, cliente_tel, envio_ciudad, envio_direccion, notas_cliente, cupon_codigo,
+                     estado, pago_estado, metodo_pago, expira_pago, idempotencia)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+                ->execute([$nombre, $tel, $mail, $ciudad, $dir, $notas, $sub, $descuento, $cup ? $cup['codigo'] : null, $total, $ip,
+                    $nombre, $mail, $tel, $ciudad, $dir, $notas, $cup ? $cup['codigo'] : null,
+                    'pendiente_pago', 'pendiente', 'contraentrega', date('Y-m-d H:i:s', time() + 7200), $idem === '' ? null : $idem]);
             $pid = (int)$pdo->lastInsertId();
             $pdo->prepare('INSERT INTO pedido_eventos (pedido_id, estado_anterior, estado_nuevo, nota) VALUES (?,?,?,?)')
-                ->execute([$pid, null, 'nuevo', 'Pedido creado desde la tienda']);
+                ->execute([$pid, null, 'pendiente_pago', 'Pedido creado desde la tienda']);
 
             // 5. Asignación real por variante + libro mayor de stock
             $insItem = $pdo->prepare('INSERT INTO pedido_items (pedido_id, variante_id, producto_id, nombre, sku, talla, color, precio, cantidad) VALUES (?,?,?,?,?,?,?,?,?)');
@@ -362,6 +379,48 @@ try {
         req($m === 'POST', 'Método no permitido');
         admin('categorias.borrar');
         out(cat_categoria_borrar((string)(body()['id'] ?? '')));
+
+    /* ---------------- BACKOFFICE · Fase 3 (pedidos) ---------------- */
+    case 'pedidos':
+        admin('pedidos.ver');
+        out(ped_lista($_GET));
+
+    case 'pedido_detalle':
+        admin('pedidos.ver');
+        out(ped_detalle((int)($_GET['id'] ?? 0)));
+
+    case 'pedido_transicion':
+        req($m === 'POST', 'Método no permitido');
+        admin();
+        out(ped_transicion(body()));
+
+    case 'pedido_pago':
+        req($m === 'POST', 'Método no permitido');
+        admin('pedidos.editar');
+        out(ped_pago(body()));
+
+    case 'pedido_nota':
+        req($m === 'POST', 'Método no permitido');
+        admin('pedidos.editar');
+        out(ped_nota(body()));
+
+    case 'guia_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('envios.gestionar');
+        out(ped_guia(body()));
+
+    case 'factura_emitir':
+        req($m === 'POST', 'Método no permitido');
+        admin('facturas.emitir');
+        out(ped_factura_emitir((int)(body()['id'] ?? 0)));
+
+    case 'factura_ver':
+        admin('facturas.ver');
+        out(ped_factura_ver((int)($_GET['id'] ?? 0)));
+
+    case 'transportadoras':
+        admin('envios.gestionar');
+        out(ped_transportadoras($m === 'POST' ? body() : null));
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':
