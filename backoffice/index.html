@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#141414">
+<title>Backoffice · MotoGear</title>
+<link rel="stylesheet" href="admin.css?v=2">
+</head>
+<body>
+
+<!-- ===================== Acceso ===================== -->
+<section id="acceso" class="acceso">
+  <form id="form-acceso" class="acceso-caja" novalidate>
+    <p class="marca-logo grande" aria-hidden="true">MG</p>
+    <h1>MotoGear</h1>
+    <p class="acceso-sub">Backoffice</p>
+
+    <label for="usuario">Usuario</label>
+    <input id="usuario" name="usuario" autocomplete="username" required autofocus>
+
+    <label for="clave">Contraseña</label>
+    <input id="clave" name="clave" type="password" autocomplete="current-password" required>
+
+    <button class="btn ancho" type="submit" id="btn-acceso">Entrar</button>
+    <p id="acceso-error" class="error" role="alert" hidden></p>
+    <a class="acceso-volver" href="../index.html">Volver a la tienda</a>
+  </form>
+</section>
+
+<!-- ===================== Aplicación ===================== -->
+<div id="app" class="app" hidden>
+  <div id="velo" class="velo" hidden></div>
+
+  <aside id="lateral" class="lateral" aria-label="Menú principal">
+    <div class="marca">
+      <span class="marca-logo" aria-hidden="true">MG</span>
+      <span class="marca-txt">MotoGear</span>
+    </div>
+
+    <nav class="nav" id="nav">
+      <p class="nav-grupo">General</p>
+      <a class="nav-item" href="#/dashboard" data-ruta="dashboard" data-permiso="dashboard.ver"><span class="nav-ico" aria-hidden="true">▦</span><span class="nav-txt">Resumen</span></a>
+
+      <p class="nav-grupo">Ventas</p>
+      <a class="nav-item" href="#/pedidos" data-ruta="pedidos" data-permiso="pedidos.ver"><span class="nav-ico" aria-hidden="true">🧾</span><span class="nav-txt">Pedidos</span><span class="nav-fase">3</span></a>
+      <a class="nav-item" href="#/carritos" data-ruta="carritos" data-permiso="carritos.ver"><span class="nav-ico" aria-hidden="true">🛒</span><span class="nav-txt">Carritos</span><span class="nav-fase">5</span></a>
+
+      <p class="nav-grupo">Catálogo</p>
+      <a class="nav-item" href="#/productos" data-ruta="productos" data-permiso="productos.ver"><span class="nav-ico" aria-hidden="true">📦</span><span class="nav-txt">Productos</span><span class="nav-fase">2</span></a>
+      <a class="nav-item" href="#/categorias" data-ruta="categorias" data-permiso="categorias.editar"><span class="nav-ico" aria-hidden="true">🏷️</span><span class="nav-txt">Categorías</span><span class="nav-fase">2</span></a>
+      <a class="nav-item" href="#/inventario" data-ruta="inventario" data-permiso="inventario.ajustar"><span class="nav-ico" aria-hidden="true">📊</span><span class="nav-txt">Inventario</span><span class="nav-fase">2</span></a>
+
+      <p class="nav-grupo">Clientes</p>
+      <a class="nav-item" href="#/clientes" data-ruta="clientes" data-permiso="clientes.ver"><span class="nav-ico" aria-hidden="true">👤</span><span class="nav-txt">Clientes</span><span class="nav-fase">4</span></a>
+      <a class="nav-item" href="#/devoluciones" data-ruta="devoluciones" data-permiso="devoluciones.ver"><span class="nav-ico" aria-hidden="true">↩️</span><span class="nav-txt">Devoluciones</span><span class="nav-fase">4</span></a>
+      <a class="nav-item" href="#/mensajes" data-ruta="mensajes" data-permiso="mensajes.ver"><span class="nav-ico" aria-hidden="true">💬</span><span class="nav-txt">Mensajes</span><span class="nav-fase">1</span></a>
+
+      <p class="nav-grupo">Marketing</p>
+      <a class="nav-item" href="#/cupones" data-ruta="cupones" data-permiso="cupones.ver"><span class="nav-ico" aria-hidden="true">🎟️</span><span class="nav-txt">Cupones</span><span class="nav-fase">1</span></a>
+      <a class="nav-item" href="#/promociones" data-ruta="promociones" data-permiso="promociones.ver"><span class="nav-ico" aria-hidden="true">✨</span><span class="nav-txt">Promociones</span><span class="nav-fase">5</span></a>
+
+      <p class="nav-grupo">Sistema</p>
+      <a class="nav-item" href="#/pagos" data-ruta="pagos" data-permiso="pagos.ver"><span class="nav-ico" aria-hidden="true">💳</span><span class="nav-txt">Pagos</span><span class="nav-fase">6</span></a>
+      <a class="nav-item" href="#/usuarios" data-ruta="usuarios" data-permiso="usuarios.gestionar"><span class="nav-ico" aria-hidden="true">🔑</span><span class="nav-txt">Usuarios</span><span class="nav-fase">1</span></a>
+      <a class="nav-item" href="#/auditoria" data-ruta="auditoria" data-permiso="auditoria.ver"><span class="nav-ico" aria-hidden="true">📋</span><span class="nav-txt">Auditoría</span><span class="nav-fase">1</span></a>
+      <a class="nav-item" href="#/configuracion" data-ruta="configuracion" data-permiso="config.editar"><span class="nav-ico" aria-hidden="true">⚙️</span><span class="nav-txt">Configuración</span><span class="nav-fase">6</span></a>
+    </nav>
+
+    <div class="lateral-pie">
+      <a class="btn sec mini" href="../admin.html" target="_blank" rel="noopener">Panel anterior</a>
+    </div>
+  </aside>
+
+  <div class="contenido">
+    <header class="topbar">
+      <button id="menu" class="icono-btn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="lateral">☰</button>
+      <h1 id="titulo" class="topbar-titulo" tabindex="-1">Resumen</h1>
+
+      <div class="topbar-acciones">
+        <button id="btn-buscar" class="icono-btn" type="button" aria-label="Buscar (Ctrl + K)" title="Buscar (Ctrl + K)">⌕</button>
+
+        <button id="btn-notif" class="icono-btn" type="button" aria-label="Notificaciones" aria-expanded="false" aria-controls="panel-notif">
+          <span aria-hidden="true">🔔</span>
+          <span id="notif-globo" class="globo" hidden></span>
+        </button>
+
+        <span id="usuario-nombre" class="usuario-nombre"></span>
+        <button id="btn-salir" class="btn sec mini" type="button">Salir</button>
+      </div>
+    </header>
+
+    <main id="vista" class="vista" tabindex="-1"></main>
+  </div>
+
+  <div id="panel-notif" class="panel-notif" hidden>
+    <div class="panel-notif-cab">
+      <h2>Notificaciones</h2>
+      <button id="notif-leer" class="btn sec mini" type="button">Marcar leídas</button>
+    </div>
+    <div id="notif-lista" class="panel-notif-lista"></div>
+  </div>
+</div>
+
+<!-- ===================== Paleta de búsqueda ===================== -->
+<div id="paleta" class="paleta" hidden>
+  <div class="paleta-caja" role="dialog" aria-modal="true" aria-labelledby="paleta-titulo">
+    <h2 id="paleta-titulo" class="oculto-visual">Buscar en el backoffice</h2>
+    <input id="paleta-input" type="search" placeholder="Pedido, producto, teléfono…" autocomplete="off" aria-controls="paleta-lista">
+    <ul id="paleta-lista" class="paleta-lista"></ul>
+    <p class="paleta-pie"><kbd>Esc</kbd> cerrar · <kbd>Enter</kbd> abrir</p>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js?v=1"></script>
+</body>
+</html>

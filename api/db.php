@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
+
+// Marca de acceso: los archivos de api/src/ solo se cargan desde aquí o desde el cron.
+define('MG_APP', true);
+
 require __DIR__ . '/config.php';
+
+// Toda la aplicación trabaja en hora de Colombia, nunca en la del servidor.
+date_default_timezone_set('America/Bogota');
 
 /* ---------- Cabeceras de seguridad de la API ---------- */
 header('Content-Type: application/json; charset=utf-8');
@@ -25,17 +32,7 @@ session_name('mgsid');
 session_start();
 
 /* ---------- Base de datos ---------- */
-function db(): PDO {
-    static $p = null;
-    if (!$p) {
-        $p = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
-    }
-    return $p;
-}
+require __DIR__ . '/src/Conexion.php';
 
 /* ---------- Salida / entrada ---------- */
 function out($d, int $code = 200): void {

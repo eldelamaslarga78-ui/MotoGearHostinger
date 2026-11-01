@@ -1,6 +1,6 @@
 # Fase 1 · Shell y Dashboard
 
-> **Duración:** 2 semanas · **Estado:** pendiente
+> **Duración:** 2 semanas · **Estado:** ✅ implementada y probada en entorno local el 31/10/2026 (pendiente de subir a producción)
 > **Depende de:** Fase 0 (cerrada el 30/10/2026)
 > **Entregable verificable:** dashboard con datos reales, comparación contra el periodo anterior, gráficos SVG sin dependencias y alertas accionables.
 > **Documento base:** `docs/ARQUITECTURA-BACKOFFICE.md` § 3.1, § 3.2 y § 1.3.11.
@@ -11,7 +11,7 @@
 
 ### Entra
 
-- Shell del backoffice (`admin/`) con sidebar, topbar y router por hash.
+- Shell del backoffice (`backoffice/`) con sidebar, topbar y router por hash.
 - Cliente API común (fetch + CSRF + errores + reintentos).
 - KPIs: ingresos, pedidos, ticket promedio, conversión, por despachar.
 - Comparación con periodo anterior y selector de rango.
@@ -35,7 +35,9 @@
 - RBAC ya operativo (`puede()`, `admin()`, `auditar()`).
 - Tablas `kpi_snapshots`, `cache_kv`, `visitas`, `notificaciones` y vista `v_stock_bajo` **definidas** en `sql/schema.sql`, pero **aún no creadas en producción** (ver sección 3).
 
-**Regla de convivencia:** `admin.html` sigue publicado y funcionando. El shell nuevo vive en `admin/` y se cambia el enlace cuando alcance paridad en Fase 3. Nada de big-bang.
+**Regla de convivencia:** `admin.html` sigue publicado y funcionando. El shell nuevo vive en `backoffice/` y se cambia el enlace cuando alcance paridad en Fase 3. Nada de big-bang.
+
+**Por qué `backoffice/` y no `admin/`:** `/admin` ya sirve el panel actual (el `.htaccess` reescribe `admin.html` → `/admin`). Crear un directorio `admin/` dejaría el panel viejo inaccesible. Además, `backoffice/` deja claro qué es el panel nuevo mientras conviven los dos; el enlace "Panel anterior" del sidebar apunta al viejo para las secciones aún no migradas.
 
 ## 3. Modelo de datos
 
@@ -101,19 +103,22 @@ Nunca dupliques esta lógica en las vistas: vive en `api/src/Metricas.php`.
 ## 5. Frontend
 
 ```
-admin/
+backoffice/
 ├── index.html          shell (sidebar + topbar + <main>)
 ├── admin.css           tokens existentes + layout
 └── js/
-    ├── app.js          arranque, router por hash, sesión
+    ├── app.js          arranque, router por hash, sesión, paleta, notificaciones
     ├── api.js          fetch + X-CSRF + manejo de 401/403/422
+    ├── formato.js      dinero COP, fechas, números (es-CO)
     ├── ui/
-    │   ├── charts.js   helper SVG (~80 líneas)
-    │   ├── toast.js    reutiliza el actual
+    │   ├── charts.js   SVG propios: línea, barras y dona
+    │   ├── toast.js    avisos efímeros
     │   └── skeleton.js estados de carga/vacío/error
     └── vistas/
         └── dashboard.js
 ```
+
+Ningún archivo del shell usa estilos ni scripts en línea: la CSP del sitio (`style-src 'self'`, `script-src 'self'`) se cumple tal cual.
 
 - Router por hash (`#/dashboard`, `#/pedidos`…); sin recargar página.
 - Polling cada 60 s solo con la pestaña visible (`document.visibilityState`), pausa al ocultar.
@@ -131,21 +136,21 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 
 ### Semana 1
 
-- [ ] Extraer de `api/api.php` un servicio de métricas (`api/src/Metricas.php`) con funciones puras.
-- [ ] Implementar `?r=kpis` con snapshots + caché.
-- [ ] Implementar `?r=alertas` y `?r=notificaciones`.
-- [ ] Crear `cron/cron.php` (solo CLI, token) con snapshot y limpieza.
-- [ ] Añadir beacon `?r=visita` y llamada desde `main.js`.
-- [ ] Crear shell `admin/index.html` + `admin.css` + router.
+- [x] Extraer de `api/api.php` un servicio de métricas (`api/src/Metricas.php`) con funciones puras.
+- [x] Implementar `?r=kpis` con snapshots + caché.
+- [x] Implementar `?r=alertas` y `?r=notificaciones`.
+- [x] Crear `cron/cron.php` (solo CLI, token) con snapshot y limpieza.
+- [x] Añadir beacon `?r=visita` y llamada desde `main.js`.
+- [x] Crear shell `backoffice/index.html` + `admin.css` + router.
 
 ### Semana 2
 
-- [ ] Helper SVG y las tres visualizaciones.
-- [ ] Tarjetas KPI con variación y comparación.
-- [ ] Tabla de últimos pedidos y panel de alertas.
-- [ ] Command palette con `?r=buscar`.
-- [ ] Polling, estados de carga/vacío/error y accesibilidad.
-- [ ] Pruebas con datos reales y ajuste de consultas lentas.
+- [x] Helper SVG y las tres visualizaciones.
+- [x] Tarjetas KPI con variación y comparación.
+- [x] Tabla de últimos pedidos y panel de alertas.
+- [x] Command palette con `?r=buscar`.
+- [x] Polling, estados de carga/vacío/error y accesibilidad.
+- [x] Pruebas con datos reales y ajuste de consultas lentas.
 
 ## 8. Criterios de aceptación
 
@@ -172,6 +177,19 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 | Cambio de zona horaria del servidor | Los cortes de día no se mueven |
 | 1.000 pedidos en 30 días | Respuesta < 2 s en caché |
 
+### Resultado del 31/10/2026
+
+Suite E2E (`probar.ps1`) contra MariaDB 10.4 real en `mg_test`, esquema heredado + migración 001 aplicada dos veces:
+
+**53 comprobaciones, todas en OK.** Cubre: idempotencia de la migración y de `verificar_fase1.sql` (11 OK), KPIs exactos de 7 días (5 pedidos, $1.350.000, ticket $270.000, 70 visitas, 7,14 %), caché en la segunda llamada, snapshots de días cerrados, auto-reparación, alertas, `401` sin sesión, `403` por permiso, CSRF obligatorio, beacon deduplicado, búsqueda, cron con token e idempotencia.
+
+Dos fallos reales encontrados y corregidos gracias a la suite:
+
+1. `ORDER BY (stock - stock_minimo)` reventaba con `SQLSTATE[22003] … BIGINT UNSIGNED value is out of range` cuando `stock < stock_minimo`. Ahora usa `CAST(… AS SIGNED)`.
+2. La dona se estiraba al ancho de la tarjeta (cuadrado de 184 px → 463 px) porque `width: 100%` pisaba el atributo `width`; se fijó con la clase `g-dona-svg`.
+
+En navegador: dashboard a 1440 px, 1016 px y 320 px sin desbordes horizontales, cero errores y cero avisos de consola, menú móvil con foco y `Escape`, paleta `Ctrl + K`, rango `30 días` y estados de carga verificados.
+
 ## 10. Riesgos
 
 | Riesgo | Mitigación |
@@ -184,15 +202,17 @@ No se crean claves nuevas: todo el dashboard usa `dashboard.ver`, ya asignado a 
 
 ## 11. Despliegue
 
-0. **Antes de codificar:** en phpMyAdmin selecciona la base de datos de la tienda (no `information_schema`), ejecuta `sql/migraciones/001_fase1_dashboard.sql` y comprueba con `sql/verificar_fase1.sql`. La primera fila debe mostrar la base correcta y las 11 comprobaciones deben dar `OK`.
-1. Subir `api/src/`, `cron/` y `admin/`.
+0. **Antes de codificar:** en phpMyAdmin selecciona la base de datos de la tienda (no `information_schema`), ejecuta `sql/migraciones/001_fase1_dashboard.sql` y comprueba con `sql/verificar_fase1.sql`. La primera fila debe mostrar la base correcta y las 11 comprobaciones deben dar `OK`. *(Hecho el 30/10/2026 en `u441937558_Ecommerce`.)*
+1. Subir `api/src/`, `cron/` y `backoffice/`.
 2. Crear el token del cron en `config.local.php` (`CRON_TOKEN`).
 3. Programar en hPanel: `php /home/uXXXX/cron/cron.php` cada 10 min.
 4. Probar `?r=kpis` con sesión real.
-5. Mantener `admin.html` publicado; enlazar `admin/` solo cuando esté validado.
+5. Mantener `admin.html` publicado; `backoffice/` se enlaza desde la portada cuando la Fase 3 dé paridad.
 
-**Rollback:** borrar `admin/` y el cron; la API existente no cambia.
+**Rollback:** borrar `backoffice/` y el cron; la API existente no cambia.
 
 ## 12. Definición de terminado
 
 `php -l` sin errores, flujos críticos probados en móvil, backup restaurado en entorno de prueba y los 9 criterios de aceptación cumplidos.
+
+Estado al 31/10/2026: los 9 criterios tienen evidencia (suite E2E + navegador), `php -l` y `node --check` limpios. Las pruebas corrieron sobre un esquema heredado reconstruido, no sobre un backup de producción restaurado; conviene repetir la suite con un volcado real antes de tocar datos de clientes. Lo que falta para cerrar la fase es solo operativo: subir `backoffice/`, `api/src/`, `cron/` y los tres archivos modificados, crear `CRON_TOKEN` en producción y programar el cron.

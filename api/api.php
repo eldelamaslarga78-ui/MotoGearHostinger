@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/db.php';
+require __DIR__ . '/src/Cache.php';
+require __DIR__ . '/src/Metricas.php';
 
 class UserError extends Exception {}
 function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }
@@ -251,6 +253,44 @@ try {
         $_SESSION = [];
         session_destroy();
         out(['ok' => true]);
+
+    /* ---------------- BACKOFFICE · Fase 1 ---------------- */
+    case 'kpis':
+        admin('dashboard.ver');
+        [$desde, $hasta] = mg_rango($_GET['desde'] ?? null, $_GET['hasta'] ?? null);
+        out(mg_kpis($desde, $hasta));
+
+    case 'alertas':
+        admin('dashboard.ver');
+        $a = mg_alertas();
+        // La UI solo oculta botones; el recorte real ocurre aquí.
+        if (!puede('productos.ver')) unset($a['stock']);
+        if (!puede('pedidos.ver'))   unset($a['detenidos']);
+        if (!puede('mensajes.ver'))  unset($a['mensajes']);
+        out($a);
+
+    case 'notificaciones':
+        admin();
+        out(mg_notificaciones((int)($_SESSION['uid'] ?? 0)));
+
+    case 'notificacion_leer':
+        admin();
+        req($m === 'POST', 'Método no permitido');
+        $b = body();
+        $id = isset($b['id']) && (int)$b['id'] > 0 ? (int)$b['id'] : null;
+        out(['ok' => true, 'marcadas' => mg_notificacion_leer((int)($_SESSION['uid'] ?? 0), $id)]);
+
+    case 'pedidos_recientes':
+        admin('pedidos.ver');
+        out(mg_pedidos_recientes((int)($_GET['limite'] ?? 8)));
+
+    case 'buscar':
+        admin();
+        out(mg_buscar((string)($_GET['q'] ?? '')));
+
+    case 'visita':
+        req($m === 'POST', 'Método no permitido');
+        out(mg_visita(body()));
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':

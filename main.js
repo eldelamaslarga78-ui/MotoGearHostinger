@@ -261,3 +261,36 @@
     }
   })();
 })();
+/* ============================================================================
+   Beacon de visitas (Fase 1)
+   Alimenta la conversión del dashboard. Sin cookies de terceros, sin datos
+   personales: solo ruta, origen, UTMs y un hash de sesión/IP en el servidor.
+   ========================================================================== */
+(() => {
+  'use strict';
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+
+  const params = new URLSearchParams(location.search);
+  const datos = JSON.stringify({
+    ruta: location.pathname,
+    referrer: document.referrer || '',
+    utm_source: params.get('utm_source') || '',
+    utm_medium: params.get('utm_medium') || '',
+    utm_campaign: params.get('utm_campaign') || '',
+  });
+
+  const url = 'api/api.php?r=visita';
+  try {
+    if (navigator.sendBeacon) {
+      const enviado = navigator.sendBeacon(url, new Blob([datos], { type: 'application/json' }));
+      if (enviado) return;
+    }
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: datos,
+      credentials: 'same-origin',
+      keepalive: true,
+    }).catch(() => {});
+  } catch { /* una visita perdida nunca rompe la tienda */ }
+})();
