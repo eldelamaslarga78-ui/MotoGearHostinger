@@ -11,7 +11,7 @@ const VISTAS = {
   dashboard: { titulo: 'Resumen', permiso: 'dashboard.ver', modulo: () => import('./vistas/dashboard.js') },
   pedidos: { titulo: 'Pedidos', permiso: 'pedidos.ver', fase: 3, legado: true, desc: 'Bandeja con filtros, detalle y máquina de estados.' },
   carritos: { titulo: 'Carritos', permiso: 'carritos.ver', fase: 5, desc: 'Carritos abandonados y recuperación.' },
-  productos: { titulo: 'Productos', permiso: 'productos.ver', fase: 2, legado: true, desc: 'CRUD completo con variantes, imágenes y precios.' },
+  productos: { titulo: 'Productos', permiso: 'productos.ver', fase: 2, modulo: () => import('./vistas/productos.js'), desc: 'CRUD completo con variantes, imágenes y precios.' },
   categorias: { titulo: 'Categorías', permiso: 'categorias.editar', fase: 2, legado: true, desc: 'Árbol de categorías y orden del catálogo.' },
   inventario: { titulo: 'Inventario', permiso: 'inventario.ajustar', fase: 2, desc: 'Ajustes de stock con libro mayor y alertas.' },
   clientes: { titulo: 'Clientes', permiso: 'clientes.ver', fase: 4, desc: 'Ficha única con pedidos, direcciones y RMA.' },

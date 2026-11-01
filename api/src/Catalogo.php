@@ -50,6 +50,17 @@ function cat_sku_unico(string $sku, int $excluirId = 0): string {
     }
 }
 
+/** Categorías (para filtros y CRUD). */
+function cat_categorias(): array {
+    return array_map(fn($x) => [
+        'id'       => (string)$x['id'],
+        'nombre'   => (string)$x['nombre'],
+        'padre_id' => $x['padre_id'],
+        'orden'    => (int)$x['orden'],
+        'activo'   => (bool)$x['activo'],
+    ], db()->query('SELECT id, nombre, padre_id, orden, activo FROM categorias ORDER BY orden, nombre')->fetchAll());
+}
+
 /* ------------------------------- listado ------------------------------- */
 
 /**
@@ -99,6 +110,7 @@ function cat_productos(array $g): array {
     $offset = ($pagina - 1) * $limite;
     $sql = "SELECT p.id, p.sku, p.nombre, p.slug, p.categoria_id, c.nombre AS categoria,
                    p.marca, p.precio, p.precio_antes, p.destacado, p.activo, p.creado,
+                   COALESCE((SELECT i.ruta FROM producto_imagenes i WHERE i.producto_id=p.id ORDER BY i.principal DESC, i.orden, i.id LIMIT 1), p.img) AS img,
                    COALESCE((SELECT SUM(v.stock) FROM variantes v WHERE v.producto_id=p.id AND v.activo=1), 0) AS stock,
                    (SELECT COUNT(*) FROM variantes v WHERE v.producto_id=p.id) AS n_variantes
               FROM productos p
@@ -118,6 +130,7 @@ function cat_productos(array $g): array {
         'marca'       => (string)$x['marca'],
         'precio'      => (int)$x['precio'],
         'precio_antes'=> $x['precio_antes'] !== null ? (int)$x['precio_antes'] : null,
+        'img'         => (string)$x['img'],
         'destacado'   => (bool)$x['destacado'],
         'activo'      => (bool)$x['activo'],
         'stock'       => (int)$x['stock'],

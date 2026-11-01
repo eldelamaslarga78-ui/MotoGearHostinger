@@ -197,7 +197,7 @@ kbd {
 .kpi-neutro { color: var(--tinta-2); }
 
 /* ------------------------------- Gráficos -------------------------------- */
-.rejilla-graficos { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.rejilla-graficos { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
 .tarjeta {
   background: var(--panel); border-radius: var(--radio); box-shadow: var(--sombra);
   padding: 16px 18px; display: grid; gap: 10px; min-width: 0;
@@ -270,6 +270,29 @@ kbd {
 .est-enviado { background: #ede9fe; color: #5b21b6; }
 .est-entregado { background: var(--ok-suave); color: var(--ok); }
 .est-cancelado, .est-devuelto { background: #eef0f2; color: var(--tinta-2); }
+
+/* ------------------------------- Catálogo -------------------------------- */
+.campo {
+  padding: 7px 10px; border: 1px solid var(--linea); border-radius: 9px;
+  font: inherit; font-size: .84rem; color: var(--tinta); background: #fff;
+}
+.campo:focus { outline: none; border-color: var(--rojo); }
+.herramientas { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 14px 0; }
+.herramientas .buscador { flex: 1; min-width: 200px; }
+.paginacion {
+  display: flex; gap: 8px; align-items: center; justify-content: flex-end;
+  padding: 12px 0 2px; font-size: .8rem; color: var(--tinta-2);
+}
+.paginacion .btn { padding: 5px 12px; }
+.celda-producto { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.miniatura {
+  width: 38px; height: 38px; border-radius: 8px; object-fit: cover; flex: 0 0 38px;
+  background: #f2f4f6; border: 1px solid var(--linea);
+}
+.celda-producto .nombre { font-weight: 600; color: var(--tinta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.celda-producto .sku { font-size: .72rem; color: var(--tinta-3); }
+.est-activo { background: var(--ok-suave); color: var(--ok); }
+.est-inactivo { background: #eef0f2; color: var(--tinta-2); }
 
 /* ---------------------------- Notificaciones ----------------------------- */
 .panel-notif {

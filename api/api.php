@@ -294,6 +294,10 @@ try {
         out(mg_visita(body()));
 
     /* ---------------- BACKOFFICE · Fase 2 (catálogo) ---------------- */
+    case 'categorias':
+        admin();
+        out(cat_categorias());
+
     case 'productos':
         admin('productos.ver');
         out(cat_productos($_GET));
