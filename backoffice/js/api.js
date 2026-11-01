@@ -6,6 +6,10 @@ export function setCsrf(token) {
   CSRF = token || '';
 }
 
+export function csrfToken() {
+  return CSRF;
+}
+
 export class ApiError extends Error {
   constructor(mensaje, estado, datos) {
     super(mensaje);

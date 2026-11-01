@@ -12,6 +12,7 @@ const VISTAS = {
   pedidos: { titulo: 'Pedidos', permiso: 'pedidos.ver', fase: 3, legado: true, desc: 'Bandeja con filtros, detalle y máquina de estados.' },
   carritos: { titulo: 'Carritos', permiso: 'carritos.ver', fase: 5, desc: 'Carritos abandonados y recuperación.' },
   productos: { titulo: 'Productos', permiso: 'productos.ver', fase: 2, modulo: () => import('./vistas/productos.js'), desc: 'CRUD completo con variantes, imágenes y precios.' },
+  producto: { titulo: 'Producto', permiso: 'productos.editar', fase: 2, modulo: () => import('./vistas/producto.js'), desc: 'Ficha de producto.' },
   categorias: { titulo: 'Categorías', permiso: 'categorias.editar', fase: 2, legado: true, desc: 'Árbol de categorías y orden del catálogo.' },
   inventario: { titulo: 'Inventario', permiso: 'inventario.ajustar', fase: 2, desc: 'Ajustes de stock con libro mayor y alertas.' },
   clientes: { titulo: 'Clientes', permiso: 'clientes.ver', fase: 4, desc: 'Ficha única con pedidos, direcciones y RMA.' },

@@ -1,8 +1,7 @@
 /* Vista · Productos (Fase 2, listado). */
 
 import { api } from '../api.js';
-import { toast } from '../ui/toast.js';
-import { esc, money, numero, fechaHora } from '../formato.js';
+import { esc, money, numero } from '../formato.js';
 import { panelError, vacio } from '../ui/skeleton.js';
 
 const LIMITE = 20;
@@ -154,7 +153,7 @@ function conectar() {
   });
 
   raiz.querySelector('#productos-nuevo').addEventListener('click', () => {
-    toast('La ficha de producto llega en el siguiente paso de la Fase 2');
+    location.hash = '#/producto/nuevo';
   });
 
   raiz.querySelector('#productos-cuerpo').addEventListener('click', (e) => {
@@ -167,7 +166,7 @@ function conectar() {
       return;
     }
     const btn = e.target.closest('button[data-id]');
-    if (btn) toast(`Editar el producto #${btn.dataset.id} llega en el siguiente paso`);
+    if (btn) location.hash = '#/producto/' + btn.dataset.id;
   });
 }
 
