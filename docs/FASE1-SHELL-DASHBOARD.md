@@ -120,6 +120,8 @@ backoffice/
 
 Ningún archivo del shell usa estilos ni scripts en línea: la CSP del sitio (`style-src 'self'`, `script-src 'self'`) se cumple tal cual.
 
+**Modo diagnóstico:** añadir `?diagnostico=1` a la URL abre un panel flotante con cada llamada a la API, su código HTTP y el cuerpo de las respuestas que fallan, además de los errores de JavaScript. Sirve para revisar el servidor desde un móvil o desde un navegador sin DevTools. No se carga si el parámetro no está presente.
+
 - Router por hash (`#/dashboard`, `#/pedidos`…); sin recargar página.
 - Polling cada 60 s solo con la pestaña visible (`document.visibilityState`), pausa al ocultar.
 - Indicador honesto: "Actualizado hace X s" con botón de refresco.

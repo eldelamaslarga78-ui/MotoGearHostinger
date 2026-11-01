@@ -365,6 +365,14 @@ function conectar() {
 
 (async function inicio() {
   conectar();
+  // ?diagnostico=1 muestra en pantalla las llamadas a la API y los errores de JS.
+  // Se espera la carga para espiar fetch antes de la primera petición.
+  if (new URLSearchParams(location.search).has('diagnostico')) {
+    try {
+      const m = await import('./diagnostico.js');
+      m.iniciarDiagnostico();
+    } catch { /* el diagnóstico nunca debe impedir el arranque */ }
+  }
   try {
     if (await cargarSesion()) {
       mostrarApp();

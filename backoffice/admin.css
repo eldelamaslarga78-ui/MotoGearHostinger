@@ -376,3 +376,35 @@ kbd {
   .tabla td::before { content: attr(data-etiqueta); color: var(--tinta-3); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; text-align: left; }
   .tabla td.num { text-align: right; }
 }
+
+/* ---------------------------- Modo diagnóstico ---------------------------
+   Solo aparece con ?diagnostico=1 (panel flotante con las llamadas a la API).
+   Va al final para no mezclarse con los estilos de la interfaz. */
+.diag {
+  position: fixed; right: 14px; bottom: 14px; z-index: 9999; width: min(440px, 94vw); max-height: 46vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: #14181d; color: #e8ebee; border-radius: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .74rem;
+}
+.diag-cab { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #1c2229; border-bottom: 1px solid #2a323b; }
+.diag-cab strong { margin-right: auto; color: #fff; font-size: .78rem; }
+.diag-cuenta { background: #2a323b; color: #cfd6de; border-radius: 999px; padding: 0 8px; font-size: .7rem; }
+.diag-btn {
+  border: 1px solid #39434e; background: transparent; color: #cfd6de; border-radius: 7px;
+  padding: 2px 8px; font: inherit; font-size: .7rem; cursor: pointer;
+}
+.diag-btn:hover { background: #2a323b; color: #fff; }
+.diag-lista { margin: 0; padding: 6px 10px 10px; list-style: none; overflow: auto; display: grid; gap: 6px; }
+.diag-item { border-left: 3px solid #39434e; padding-left: 8px; }
+.diag-item.diag-error { border-color: #e5484d; }
+.diag-item.diag-ok { border-color: #1e7e34; }
+.diag-meta { color: #cfd6de; word-break: break-word; }
+.diag-item.diag-error .diag-meta { color: #ffb4b6; }
+.diag-cuerpo {
+  margin: 4px 0 0; padding: 6px; max-height: 120px; overflow: auto;
+  background: #0d1013; border-radius: 6px; color: #9fb0c0; white-space: pre-wrap; word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .diag { right: 8px; left: 8px; bottom: 8px; width: auto; max-height: 42vh; }
+}
