@@ -316,6 +316,53 @@ try {
         admin('productos.borrar');
         out(cat_producto_archivar((int)(body()['id'] ?? 0)));
 
+    case 'variantes_generar':
+        req($m === 'POST', 'Método no permitido');
+        admin('productos.editar');
+        out(cat_variantes_generar(body()));
+
+    case 'variante_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('productos.editar');
+        out(cat_variante_guardar(body()));
+
+    case 'stock_ajustar':
+        req($m === 'POST', 'Método no permitido');
+        admin('inventario.ajustar');
+        out(cat_stock_ajustar(body()));
+
+    case 'inventario':
+        admin('productos.ver');
+        out(cat_inventario($_GET));
+
+    case 'stock_alertas':
+        admin('productos.ver');
+        out(cat_stock_alertas());
+
+    case 'imagen_subir':
+        admin('productos.editar');
+        out(cat_imagen_subir());
+
+    case 'imagen_orden':
+        req($m === 'POST', 'Método no permitido');
+        admin('productos.editar');
+        out(cat_imagen_orden(body()));
+
+    case 'imagen_borrar':
+        req($m === 'POST', 'Método no permitido');
+        admin('productos.editar');
+        out(cat_imagen_borrar(body()));
+
+    case 'categoria_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('categorias.editar');
+        out(cat_categoria_guardar(body()));
+
+    case 'categoria_borrar':
+        req($m === 'POST', 'Método no permitido');
+        admin('categorias.borrar');
+        out(cat_categoria_borrar((string)(body()['id'] ?? '')));
+
     /* ---------------- ADMIN ---------------- */
     case 'admin':
         admin();
