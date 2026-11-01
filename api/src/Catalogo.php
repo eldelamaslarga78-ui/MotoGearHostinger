@@ -487,15 +487,24 @@ function cat_stock_ajustar(array $b): array {
 /** Libro mayor filtrable. */
 function cat_inventario(array $g): array {
     $varianteId = (int)($g['variante_id'] ?? 0);
+    $q = s($g['q'] ?? '', 80);
     $pagina = max(1, (int)($g['pagina'] ?? 1));
     $limite = min(100, max(1, (int)($g['limite'] ?? 30)));
 
     $where = ['1=1'];
     $args = [];
     if ($varianteId > 0) { $where[] = 'm.variante_id = ?'; $args[] = $varianteId; }
+    if ($q !== '') {
+        $where[] = '(p.nombre LIKE ? OR v.sku LIKE ? OR m.motivo LIKE ?)';
+        $like = '%' . $q . '%';
+        array_push($args, $like, $like, $like);
+    }
     $w = implode(' AND ', $where);
 
-    $qTotal = db()->prepare("SELECT COUNT(*) FROM movimientos_stock m WHERE $w");
+    $qTotal = db()->prepare("SELECT COUNT(*) FROM movimientos_stock m
+                              JOIN variantes v ON v.id = m.variante_id
+                              JOIN productos p ON p.id = v.producto_id
+                             WHERE $w");
     $qTotal->execute($args);
     $total = (int)$qTotal->fetchColumn();
 

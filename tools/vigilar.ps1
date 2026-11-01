@@ -107,7 +107,7 @@ while ($true) {
         $rels = $aSubir | Sort-Object
         $hora = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
         Add-Content -LiteralPath $Log -Value ("{0} -> {1}" -f $hora, ($rels -join ', ')) -Encoding UTF8
-        $salida = & powershell -NoProfile -ExecutionPolicy Bypass -File $subir -Solo @($rels) 2>&1
+        $salida = & powershell -NoProfile -ExecutionPolicy Bypass -File $subir -Solo ($rels -join ',') 2>&1
         $texto = ($salida | Out-String)
         if ($texto) { Add-Content -LiteralPath $Log -Value $texto.TrimEnd() -Encoding UTF8 }
     }
