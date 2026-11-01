@@ -9,7 +9,8 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 const VISTAS = {
   dashboard: { titulo: 'Resumen', permiso: 'dashboard.ver', modulo: () => import('./vistas/dashboard.js') },
-  pedidos: { titulo: 'Pedidos', permiso: 'pedidos.ver', fase: 3, legado: true, desc: 'Bandeja con filtros, detalle y máquina de estados.' },
+  pedidos: { titulo: 'Pedidos', permiso: 'pedidos.ver', fase: 3, modulo: () => import('./vistas/pedidos.js'), desc: 'Bandeja con filtros, detalle y máquina de estados.' },
+  factura: { titulo: 'Factura', permiso: 'facturas.ver', fase: 3, modulo: () => import('./vistas/factura.js'), desc: 'Factura imprimible.' },
   carritos: { titulo: 'Carritos', permiso: 'carritos.ver', fase: 5, desc: 'Carritos abandonados y recuperación.' },
   productos: { titulo: 'Productos', permiso: 'productos.ver', fase: 2, modulo: () => import('./vistas/productos.js'), desc: 'CRUD completo con variantes, imágenes y precios.' },
   producto: { titulo: 'Producto', permiso: 'productos.editar', fase: 2, modulo: () => import('./vistas/producto.js'), desc: 'Ficha de producto.' },

@@ -270,6 +270,8 @@ kbd {
 .est-enviado { background: #ede9fe; color: #5b21b6; }
 .est-entregado { background: var(--ok-suave); color: var(--ok); }
 .est-cancelado, .est-devuelto { background: #eef0f2; color: var(--tinta-2); }
+.fila-pedido { cursor: pointer; }
+.fila-pedido:hover td { background: #f8f9fa; }
 
 /* ------------------------------- Catálogo -------------------------------- */
 .campo {
@@ -322,6 +324,44 @@ textarea.campo { resize: vertical; min-height: 84px; font: inherit; }
 .previa-seo .p-titulo { color: #1a0dab; font-size: 1.05rem; }
 .previa-seo .p-url { color: #0a6b3c; font-size: .8rem; }
 .previa-seo .p-desc { color: var(--tinta-2); font-size: .82rem; }
+
+/* ------------------------------ Drawer de pedido ------------------------- */
+.drawer-velo { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); z-index: 40; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; width: min(560px, 100vw);
+  background: var(--fondo); display: flex; flex-direction: column;
+  box-shadow: -12px 0 32px rgba(16, 24, 40, .18);
+}
+.drawer-cab { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--panel); border-bottom: 1px solid var(--linea); }
+.drawer-cab .titulo { flex: 1; min-width: 0; }
+.drawer-cab h2 { font-size: 1rem; }
+.drawer-cuerpo { flex: 1; overflow: auto; padding: 16px 18px; display: grid; gap: 14px; align-content: start; }
+.drawer-pie { padding: 12px 18px; background: var(--panel); border-top: 1px solid var(--linea); display: flex; gap: 8px; flex-wrap: wrap; }
+.timeline { display: grid; }
+.timeline .paso { display: flex; gap: 10px; position: relative; padding-bottom: 16px; }
+.timeline .paso::before { content: ''; width: 2px; background: var(--linea); position: absolute; left: 5px; top: 16px; bottom: 0; }
+.timeline .paso:last-child::before { display: none; }
+.timeline .punto { width: 12px; height: 12px; border-radius: 50%; background: var(--rojo); margin-top: 3px; flex: 0 0 12px; }
+.timeline .paso strong { display: block; font-size: .84rem; }
+.timeline .paso small { color: var(--tinta-2); font-size: .76rem; }
+.linea-dato { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f1f3f5; font-size: .84rem; }
+.linea-dato:last-child { border-bottom: 0; }
+.linea-dato span:first-child { color: var(--tinta-2); }
+
+/* ---------------------------- Factura imprimible ------------------------- */
+.factura { background: #fff; max-width: 720px; margin: 0 auto; padding: 32px; color: #1f2328; }
+.factura h1 { font-size: 1.2rem; }
+.factura-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.factura-nota { margin-top: 24px; }
+.factura table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: .86rem; }
+.factura th, .factura td { text-align: left; padding: 8px; border-bottom: 1px solid #e3e6ea; }
+.factura .num { text-align: right; }
+.factura .totales { margin-left: auto; width: 260px; margin-top: 12px; }
+@media print {
+  body * { visibility: hidden; }
+  .factura, .factura * { visibility: visible; }
+  .factura { position: absolute; left: 0; top: 0; width: 100%; max-width: none; box-shadow: none; }
+}
 
 /* ---------------------------- Notificaciones ----------------------------- */
 .panel-notif {
