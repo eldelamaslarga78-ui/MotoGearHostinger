@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
+require __DIR__ . '/src/Catalogo.php';
 
 class UserError extends Exception {}
 function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }
@@ -291,6 +292,25 @@ try {
     case 'visita':
         req($m === 'POST', 'Método no permitido');
         out(mg_visita(body()));
+
+    /* ---------------- BACKOFFICE · Fase 2 (catálogo) ---------------- */
+    case 'productos':
+        admin('productos.ver');
+        out(cat_productos($_GET));
+
+    case 'producto_detalle':
+        admin('productos.ver');
+        out(cat_producto_detalle((int)($_GET['id'] ?? 0)));
+
+    case 'producto_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('productos.editar');
+        out(cat_producto_guardar(body()));
+
+    case 'producto_archivar':
+        req($m === 'POST', 'Método no permitido');
+        admin('productos.borrar');
+        out(cat_producto_archivar((int)(body()['id'] ?? 0)));
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':
