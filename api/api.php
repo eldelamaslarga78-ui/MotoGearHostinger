@@ -5,6 +5,7 @@ require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
 require __DIR__ . '/src/Catalogo.php';
 require __DIR__ . '/src/Pedidos.php';
+require __DIR__ . '/src/CRM.php';
 
 class UserError extends Exception {}
 function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }
@@ -164,13 +165,14 @@ try {
             $total = $sub - $descuento;
 
             // 4. Pedido
+            $clienteId = crm_cliente_por_datos($nombre, $mail, $tel);
             $pdo->prepare('INSERT INTO pedidos
                     (cliente, telefono, email, ciudad, direccion, notas, subtotal, descuento, cupon, total, ip,
-                     cliente_nombre, cliente_email, cliente_tel, envio_ciudad, envio_direccion, notas_cliente, cupon_codigo,
+                     cliente_id, cliente_nombre, cliente_email, cliente_tel, envio_ciudad, envio_direccion, notas_cliente, cupon_codigo,
                      estado, pago_estado, metodo_pago, expira_pago, idempotencia)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
                 ->execute([$nombre, $tel, $mail, $ciudad, $dir, $notas, $sub, $descuento, $cup ? $cup['codigo'] : null, $total, $ip,
-                    $nombre, $mail, $tel, $ciudad, $dir, $notas, $cup ? $cup['codigo'] : null,
+                    $clienteId, $nombre, $mail, $tel, $ciudad, $dir, $notas, $cup ? $cup['codigo'] : null,
                     'pendiente_pago', 'pendiente', 'contraentrega', date('Y-m-d H:i:s', time() + 7200), $idem === '' ? null : $idem]);
             $pid = (int)$pdo->lastInsertId();
             $pdo->prepare('INSERT INTO pedido_eventos (pedido_id, estado_anterior, estado_nuevo, nota) VALUES (?,?,?,?)')
@@ -421,6 +423,44 @@ try {
     case 'transportadoras':
         admin('envios.gestionar');
         out(ped_transportadoras($m === 'POST' ? body() : null));
+
+    /* ---------------- BACKOFFICE · Fase 4 (CRM y RMA) ---------------- */
+    case 'clientes':
+        admin('clientes.ver');
+        out(crm_clientes($_GET));
+
+    case 'cliente_detalle':
+        admin('clientes.ver');
+        out(crm_cliente_detalle((int)($_GET['id'] ?? 0)));
+
+    case 'cliente_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('clientes.editar');
+        out(crm_cliente_guardar(body()));
+
+    case 'cliente_direccion':
+        req($m === 'POST', 'Método no permitido');
+        admin('clientes.editar');
+        out(crm_cliente_direccion(body()));
+
+    case 'cliente_fusionar':
+        req($m === 'POST', 'Método no permitido');
+        admin('clientes.editar');
+        out(crm_cliente_fusionar(body()));
+
+    case 'devoluciones':
+        admin('devoluciones.ver');
+        out(crm_devoluciones($_GET));
+
+    case 'devolucion_crear':
+        req($m === 'POST', 'Método no permitido');
+        admin('devoluciones.editar');
+        out(crm_devolucion_crear(body()));
+
+    case 'devolucion_transicion':
+        req($m === 'POST', 'Método no permitido');
+        admin('devoluciones.editar');
+        out(crm_devolucion_transicion(body()));
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':
