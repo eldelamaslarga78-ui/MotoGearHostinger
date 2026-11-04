@@ -9,15 +9,17 @@ declare(strict_types=1);
 
 /* --------------------------- máquina de estados -------------------------- */
 
+/** Única fuente de verdad: estado origen => [estado destino => permiso requerido]. */
+const PEDIDO_TRANSICIONES = [
+    'pendiente_pago' => ['confirmado' => 'pedidos.editar', 'cancelado' => 'pedidos.cancelar'],
+    'confirmado'     => ['en_preparacion' => 'pedidos.editar'],
+    'en_preparacion' => ['enviado' => 'envios.gestionar'],
+    'enviado'        => ['entregado' => 'pedidos.editar'],
+];
+
 /** Devuelve el permiso requerido para una transición, o null si es inválida. */
 function ped_permiso_transicion(string $desde, string $hacia): ?string {
-    $T = [
-        'pendiente_pago' => ['confirmado' => 'pedidos.editar', 'cancelado' => 'pedidos.cancelar'],
-        'confirmado'     => ['en_preparacion' => 'pedidos.editar'],
-        'en_preparacion' => ['enviado' => 'envios.gestionar'],
-        'enviado'        => ['entregado' => 'pedidos.editar'],
-    ];
-    return $T[$desde][$hacia] ?? null;
+    return PEDIDO_TRANSICIONES[$desde][$hacia] ?? null;
 }
 
 /** Devuelve el stock de un pedido (solo una vez), dentro de la transacción. */
@@ -178,13 +180,7 @@ function ped_detalle(int $id): array {
 
 /** Transiciones permitidas desde un estado (con el permiso de cada una). */
 function ped_transiciones_disponibles(string $estado): array {
-    $todos = [
-        'pendiente_pago' => ['confirmado' => 'pedidos.editar', 'cancelado' => 'pedidos.cancelar'],
-        'confirmado'     => ['en_preparacion' => 'pedidos.editar'],
-        'en_preparacion' => ['enviado' => 'envios.gestionar'],
-        'enviado'        => ['entregado' => 'pedidos.editar'],
-    ];
-    $disponibles = $todos[$estado] ?? [];
+    $disponibles = PEDIDO_TRANSICIONES[$estado] ?? [];
     $resultado = [];
     foreach ($disponibles as $hacia => $permiso) {
         if (puede($permiso)) $resultado[] = $hacia;
