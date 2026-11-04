@@ -412,5 +412,5 @@ function mk_cupon_validar(array $b): array {
     if ($err) return ['valido' => false, 'error' => $err];
     $valor = (int)($cup['valor'] ?? 0);
     if ($valor === 0 && isset($cup['pct']) && (int)$cup['pct'] > 0) $valor = (int)$cup['pct'];
-    return ['valido' => true, 'tipo' => (string)$cup['tipo'], 'valor' => $valor, 'descuento' => $desc];
+    return ['valido' => true, 'codigo' => (string)$cup['codigo'], 'tipo' => (string)$cup['tipo'], 'valor' => $valor, 'pct' => $cup['tipo'] === 'pct' ? $valor : 0, 'descuento' => $desc];
 }

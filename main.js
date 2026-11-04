@@ -2,6 +2,9 @@
 (() => {
   'use strict';
   const API = 'api/api.php', KEY = 'mg-cart2', CKEY = 'mg-coupon';
+// Misma regla que api/src/Marketing.php: el servidor recalcula al pagar; esto solo muestra la estimación.
+const descuentoCupon = (c, sub) => c.tipo === 'fijo' ? Math.min(c.valor, sub) : c.tipo === 'envio_gratis' ? 0 : Math.floor(sub * c.valor / 100);
+const etiquetaCupon = c => c.tipo === 'fijo' ? `−$${c.valor}` : c.tipo === 'envio_gratis' ? 'envío gratis' : `−${c.valor}%`;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const money = n => '$' + Math.round(n).toLocaleString('es-CO');
@@ -191,10 +194,10 @@
       };
       const subtotal = () => load().reduce((t, i) => t + (prod(i.id)?.precio || 0) * i.qty, 0);
       const totals = () => {
-        const sub = subtotal(), disc = coupon ? Math.floor(sub * coupon.pct / 100) : 0;
+        const sub = subtotal(), disc = coupon ? descuentoCupon(coupon, sub) : 0;
         lines[0].children[0].textContent = `Subtotal (${load().reduce((t, i) => t + i.qty, 0)} items)`;
         lines[0].children[1].textContent = money(sub);
-        lines[2].children[0].textContent = coupon ? `Descuento (${coupon.codigo} −${coupon.pct}%)` : 'Descuento aplicado';
+        lines[2].children[0].textContent = coupon ? `Descuento (${coupon.codigo} ${etiquetaCupon(coupon)})` : 'Descuento aplicado';
         lines[2].children[1].textContent = '− ' + money(disc);
         $('.resumen-total span:last-child').textContent = money(sub - disc);
       };

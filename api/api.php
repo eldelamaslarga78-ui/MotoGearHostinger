@@ -43,16 +43,6 @@ function sku_base(int $productoId, string $talla, string $color = ''): string {
     return $sku;
 }
 
-function cupon(string $code, int $sub, bool $lock = false): array {
-    $q = db()->prepare('SELECT * FROM cupones WHERE codigo=? AND activo=1' . ($lock ? ' FOR UPDATE' : ''));
-    $q->execute([strtoupper(trim($code))]);
-    $c = $q->fetch();
-    if (!$c) return [null, 'Cupón no válido'];
-    if ($c['vence'] && $c['vence'] < date('Y-m-d')) return [null, 'Cupón vencido'];
-    if ($sub < (int)$c['minimo']) return [null, 'Compra mínima de $' . number_format((int)$c['minimo'], 0, ',', '.')];
-    if ($c['usos_max'] !== null && (int)$c['usos'] >= (int)$c['usos_max']) return [null, 'Cupón agotado'];
-    return [$c, null];
-}
 
 $r = $_GET['r'] ?? '';
 $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -75,15 +65,11 @@ try {
         out(['categorias' => $c, 'productos' => $p]);
 
     case 'cupon':
-        req($m === 'POST', 'Método no permitido');
-        $b = body();
-        [$c, $err] = cupon(s($b['codigo'] ?? '', 30), (int)($b['subtotal'] ?? 0));
-        req($c !== null, (string)$err);
-        out(['codigo' => $c['codigo'], 'pct' => (int)$c['pct']]);
-
     case 'cupon_validar':
         req($m === 'POST', 'Método no permitido');
-        out(mk_cupon_validar(body()));
+        $r = mk_cupon_validar(body());
+        req($r['valido'], (string)($r['error'] ?? 'Cupón no válido'));
+        out($r);
 
     case 'carrito':
         req($m === 'POST', 'Método no permitido');
