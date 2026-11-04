@@ -44,6 +44,7 @@ function cabecera() {
       <p class="nota">${meta}</p>
     </div>
     <button class="btn sec mini" type="button" data-accion="volver">Volver</button>
+    ${productoId ? '<button class="btn sec mini" type="button" data-accion="archivar">Archivar o eliminar</button>' : ''}
     <button class="btn mini" type="button" data-accion="guardar">Guardar</button>
   </div>`;
 }
@@ -148,6 +149,8 @@ function panelVariantes() {
         <input class="campo" id="m-tallas" placeholder="XS, S, M, L, XL"></div>
       <div class="campo-bloque"><label for="m-colores">Colores (separados por coma)</label>
         <input class="campo" id="m-colores" placeholder="Negro, Rojo, Azul"></div>
+      <button class="btn sec mini" type="button" data-accion="preset-tallas">Cargar S, M, L, XL</button>
+      <label class="campo-bloque"><input type="checkbox" id="m-sintalla"> Sin tallas (un solo stock)</label>
       <button class="btn mini" type="button" data-accion="generar-matriz">Generar</button>
     </div>
   </div>
@@ -310,12 +313,13 @@ async function guardar() {
 }
 
 async function generarMatriz() {
+  const sinTalla = $id('m-sintalla').checked;
   const tallas = ($id('m-tallas').value || '').split(',').map((s) => s.trim()).filter(Boolean);
   const colores = ($id('m-colores').value || '').split(',').map((s) => s.trim()).filter(Boolean)
     .map((c) => ({ nombre: c, hex: '' }));
-  if (!tallas.length && !colores.length) { toast('Indica tallas o colores', 'error'); return; }
+  if (!sinTalla && !tallas.length && !colores.length) { toast('Indica tallas o colores, o marca "Sin tallas"', 'error'); return; }
   try {
-    const r = await api('variantes_generar', { cuerpo: { producto_id: productoId, tallas, colores } });
+    const r = await api('variantes_generar', { cuerpo: { producto_id: productoId, tallas, colores, sin_talla: sinTalla } });
     toast(`${r.creadas} creadas, ${r.omitidas} ya existían`);
     await recargar();
   } catch (e) {
@@ -385,9 +389,19 @@ function conectar() {
     const id = btn.dataset.id ? Number(btn.dataset.id) : null;
 
     if (accion === 'volver') { location.hash = '#/productos'; return; }
+    if (accion === 'archivar') {
+      if (!confirm('Si el producto tiene pedidos se archiva (queda oculto). Si no tiene historial se elimina. ¿Continuar?')) return;
+      try {
+        const r = await api('producto_archivar', { cuerpo: { id: productoId } });
+        toast(r.mensaje || (r.archivado ? 'Producto archivado' : 'Producto eliminado'));
+        location.hash = '#/productos';
+      } catch (e) { toast(e.message, 'error'); }
+      return;
+    }
     if (accion === 'guardar') { guardar(); return; }
     if (accion === 'pestaña') { pestaña = btn.dataset.pestaña; render(); return; }
     if (accion === 'generar-matriz') { generarMatriz(); return; }
+    if (accion === 'preset-tallas') { $id('m-tallas').value = 'S, M, L, XL'; return; }
     if (accion === 'variante-guardar') { varianteGuardar(id); return; }
     if (accion === 'variante-ajustar') { ajusteAbierto = id; render(); return; }
     if (accion === 'ajuste-cancelar') { ajusteAbierto = null; render(); return; }

@@ -7,6 +7,7 @@ import { panelError, vacio } from '../ui/skeleton.js';
 
 let raiz = null;
 let pestaña = 'promociones';
+let cuponesCache = [];
 
 const TABS = [['promociones', 'Promociones'], ['cupones', 'Cupones'], ['carritos', 'Carritos']];
 
@@ -55,20 +56,45 @@ async function verCupones() {
   <div id="mk-cupones-lista"></div>`;
   const lista = raiz.querySelector('#mk-cupones-lista');
   try {
-    const d = await api('promociones');
-    void d;
     const r = await api('admin');
-    const cupones = r.cupones || [];
-    lista.innerHTML = cupones.length
-      ? `<div class="tabla-wrap"><table class="tabla"><thead><tr><th>Código</th><th>Tipo</th><th class="num">Valor</th><th class="num">Usos</th><th>Estado</th></tr></thead><tbody>${cupones.map((cp) => `<tr>
+    cuponesCache = r.cupones || [];
+    lista.innerHTML = cuponesCache.length
+      ? `<div class="tabla-wrap"><table class="tabla"><thead><tr><th>Código</th><th>Tipo</th><th class="num">Valor</th><th class="num">Usos</th><th>Estado</th><th></th></tr></thead><tbody>${cuponesCache.map((cp) => `<tr>
         <td data-etiqueta="Código">${esc(cp.codigo)}</td>
         <td data-etiqueta="Tipo">${esc(cp.tipo || 'pct')}</td>
         <td class="num" data-etiqueta="Valor">${esc(cp.tipo === 'fijo' ? money(cp.valor) : (cp.valor || cp.pct) + '%')}</td>
         <td class="num" data-etiqueta="Usos">${numero(cp.usos)}${cp.usos_max ? '/' + numero(cp.usos_max) : ''}</td>
         <td data-etiqueta="Estado">${Number(cp.activo) ? '<span class="estado est-activo">Activo</span>' : '<span class="estado est-inactivo">Inactivo</span>'}</td>
+        <td data-etiqueta="Acciones">
+          <button class="btn sec mini" type="button" data-accion="cupon-alternar" data-codigo="${esc(cp.codigo)}">${Number(cp.activo) ? 'Desactivar' : 'Activar'}</button>
+          <button class="btn mini" type="button" data-accion="cupon-borrar" data-codigo="${esc(cp.codigo)}">Eliminar</button>
+        </td>
       </tr>`).join('')}</tbody></table></div>`
       : vacio('Sin cupones');
   } catch (e) { lista.innerHTML = panelError(esc(e.message)); }
+}
+
+async function alternarCupon(codigo) {
+  const cp = cuponesCache.find((x) => x.codigo === codigo);
+  if (!cp) return;
+  try {
+    await api('guardar', { cuerpo: { tipo: 'cupon', data: {
+      codigo: cp.codigo, tipo: cp.tipo || 'pct', valor: cp.valor ?? cp.pct, pct: cp.pct,
+      minimo: cp.minimo, vence: cp.vence || '', usos_max: cp.usos_max,
+      max_por_cliente: cp.max_por_cliente, primera_compra: !!Number(cp.primera_compra), activo: !Number(cp.activo),
+    } } });
+    toast(Number(cp.activo) ? 'Cupón desactivado' : 'Cupón activado');
+    verCupones();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function borrarCupon(codigo) {
+  if (!confirm(`¿Eliminar el cupón ${codigo}? Los pedidos que lo usaron se conservan.`)) return;
+  try {
+    await api('borrar', { cuerpo: { tipo: 'cupon', id: codigo } });
+    toast('Cupón eliminado');
+    verCupones();
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function verCarritos() {
@@ -101,6 +127,8 @@ function conectar() {
     const btn = e.target.closest('[data-accion]'); if (!btn) return;
     const a = btn.dataset.accion;
     if (a === 'tab') { pestaña = btn.dataset.tab; raiz.querySelectorAll('.ficha-tab').forEach((x) => x.setAttribute('aria-selected', String(x === btn))); render(); return; }
+    if (a === 'cupon-alternar') { alternarCupon(btn.dataset.codigo); return; }
+    if (a === 'cupon-borrar') { borrarCupon(btn.dataset.codigo); return; }
     if (a === 'recuperar') {
       try { await api('carrito_recuperar', { cuerpo: { id: Number(btn.dataset.id) } }); toast('Correo de recuperación enviado'); }
       catch (err) { toast(err.message, 'error'); }

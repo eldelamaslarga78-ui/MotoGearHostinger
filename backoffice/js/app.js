@@ -18,14 +18,15 @@ const VISTAS = {
   inventario: { titulo: 'Inventario', permiso: 'inventario.ajustar', fase: 2, modulo: () => import('./vistas/inventario.js'), desc: 'Ajustes de stock con libro mayor y alertas.' },
   clientes: { titulo: 'Clientes', permiso: 'clientes.ver', fase: 4, modulo: () => import('./vistas/clientes.js'), desc: 'Ficha única con pedidos, direcciones y RMA.' },
   devoluciones: { titulo: 'Devoluciones', permiso: 'devoluciones.ver', fase: 4, modulo: () => import('./vistas/devoluciones.js'), desc: 'RMA con estados y reembolsos.' },
-  mensajes: { titulo: 'Mensajes', permiso: 'mensajes.ver', fase: 1, legado: true, desc: 'Formulario de contacto y respuestas.' },
+  mensajes: { titulo: 'Mensajes', permiso: 'mensajes.ver', fase: 1, modulo: () => import('./vistas/mensajes.js'), desc: 'Formulario de contacto y respuestas.' },
+  cuenta: { titulo: 'Mi cuenta', permiso: null, fase: 1, modulo: () => import('./vistas/cuenta.js'), desc: 'Contraseña y acceso.' },
   cupones: { titulo: 'Cupones', permiso: 'cupones.ver', fase: 1, modulo: () => import('./vistas/marketing.js'), desc: 'Códigos, vigencias y usos.' },
   promociones: { titulo: 'Promociones', permiso: 'promociones.ver', fase: 5, modulo: () => import('./vistas/marketing.js'), desc: 'Descuentos automáticos por producto o categoría.' },
   pagos: { titulo: 'Pagos', permiso: 'pagos.ver', fase: 6, desc: 'Pasarela, conciliación y reembolsos.' },
-  usuarios: { titulo: 'Usuarios', permiso: 'usuarios.gestionar', fase: 1, desc: 'Roles, permisos y acceso del equipo.' },
+  usuarios: { titulo: 'Usuarios', permiso: 'usuarios.gestionar', fase: 1, modulo: () => import('./vistas/usuarios.js'), desc: 'Roles, permisos y acceso del equipo.' },
   seguridad: { titulo: 'Seguridad', permiso: 'usuarios.gestionar', fase: 6, modulo: () => import('./vistas/seguridad.js'), desc: 'Autenticación en dos pasos (2FA).' },
-  auditoria: { titulo: 'Auditoría', permiso: 'auditoria.ver', fase: 1, desc: 'Registro inmutable de cambios.' },
-  configuracion: { titulo: 'Configuración', permiso: 'config.editar', fase: 6, desc: 'Datos de la tienda, envíos e impuestos.' },
+  auditoria: { titulo: 'Auditoría', permiso: 'auditoria.ver', fase: 1, modulo: () => import('./vistas/auditoria.js'), desc: 'Registro inmutable de cambios.' },
+  configuracion: { titulo: 'Configuración', permiso: 'config.editar', fase: 6, modulo: () => import('./vistas/configuracion.js'), desc: 'Ajustes del carrito y del correo.' },
 };
 
 let PERMS = [];
@@ -127,7 +128,7 @@ async function render() {
   }
   vistaActual = null;
 
-  if (!puede(ruta.permiso)) {
+  if (ruta.permiso && !puede(ruta.permiso)) {
     vistaActual = vistaNoDisponible(ruta, 'Tu rol no tiene acceso a esta sección.');
     $('#titulo').textContent = ruta.titulo;
     document.title = ruta.titulo + ' · MotoGear';

@@ -376,6 +376,8 @@ function cat_variantes_generar(array $b): array {
         $colores[] = ['nombre' => $nombre, 'hex' => $hex];
     }
 
+    // Producto sin tallas (un solo stock): una variante con talla vacía.
+    if (!empty($b['sin_talla'])) $tallas = [''];
     req(count($tallas) > 0 || count($colores) > 0, 'Indica al menos tallas o colores');
     if (!$tallas) $tallas = [''];
     if (!$colores) $colores = [['nombre' => '', 'hex' => '']];
