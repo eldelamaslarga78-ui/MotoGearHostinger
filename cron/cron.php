@@ -38,6 +38,8 @@ require __DIR__ . '/../api/src/Conexion.php';
 require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Metricas.php';
 require __DIR__ . '/../api/src/Pedidos.php';
+require __DIR__ . '/../api/src/CRM.php';
+require __DIR__ . '/../api/src/Marketing.php';
 
 $inicio = microtime(true);
 
@@ -47,14 +49,18 @@ try {
     $visitas   = db()->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
     $notifs    = db()->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
     $expirados = ped_expirar_pendientes();
+    $abandonos = mk_marcar_abandonos();
+    $recordatorios = mk_enviar_recordatorios();
 
     printf(
-        "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d expirados=%d %.0fms\n",
+        "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d expirados=%d abandonos=%d recordatorios=%d %.0fms\n",
         $snapshots,
         $cache,
         (int)$visitas,
         (int)$notifs,
         $expirados,
+        $abandonos,
+        $recordatorios,
         (microtime(true) - $inicio) * 1000
     );
 } catch (Throwable $e) {

@@ -6,6 +6,8 @@ require __DIR__ . '/src/Metricas.php';
 require __DIR__ . '/src/Catalogo.php';
 require __DIR__ . '/src/Pedidos.php';
 require __DIR__ . '/src/CRM.php';
+require __DIR__ . '/src/Marketing.php';
+require __DIR__ . '/src/Seguridad.php';
 
 class UserError extends Exception {}
 function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }
@@ -79,6 +81,14 @@ try {
         req($c !== null, (string)$err);
         out(['codigo' => $c['codigo'], 'pct' => (int)$c['pct']]);
 
+    case 'cupon_validar':
+        req($m === 'POST', 'Método no permitido');
+        out(mk_cupon_validar(body()));
+
+    case 'carrito':
+        req($m === 'POST', 'Método no permitido');
+        out(mk_carrito(body()));
+
     case 'pedido':
         req($m === 'POST', 'Método no permitido');
         $b = body();
@@ -93,7 +103,7 @@ try {
         req(preg_match('/^\+?\d{7,15}$/', $tel) === 1, 'Teléfono no válido');
         req($ciudad !== '', 'Indica tu ciudad');
         req(mb_strlen($dir) >= 5, 'Indica tu dirección');
-        req($mail === '' || filter_var($mail, FILTER_VALIDATE_EMAIL) !== false, 'Correo no válido');
+        req($mail !== '' && filter_var($mail, FILTER_VALIDATE_EMAIL) !== false, 'Escribe un correo válido para confirmar tu pedido');
         $items = $b['items'] ?? [];
         req(is_array($items) && count($items) >= 1 && count($items) <= 50, 'Tu carrito está vacío');
         foreach ($items as $it) req(is_array($it), 'Carrito no válido');
@@ -139,7 +149,7 @@ try {
             }
 
             // 2. Validación y total (sin tocar stock todavía)
-            $sub = 0; $need = []; $lineas = [];
+            $sub = 0; $need = []; $lineas = []; $lineasPromo = [];
             foreach ($items as $i) {
                 $id = (int)($i['id'] ?? 0); $qty = (int)($i['qty'] ?? 0); $talla = s($i['talla'] ?? '', 10);
                 req(isset($P[$id]), 'Un producto de tu carrito ya no está disponible');
@@ -151,21 +161,32 @@ try {
                 req($need[$k] <= $disp, 'Stock insuficiente de ' . $P[$id]['nombre'] . ($talla !== '' ? " (talla $talla)" : ''));
                 $sub += (int)$P[$id]['precio'] * $qty;
                 $lineas[] = ['id' => $id, 'qty' => $qty, 'talla' => $talla];
+                $lineasPromo[] = ['producto_id' => $id, 'categoria' => (string)$P[$id]['categoria_id'], 'precio' => (int)$P[$id]['precio'], 'cantidad' => $qty];
             }
 
-            // 3. Cupón (recalculado en servidor)
-            $cup = null; $pct = 0;
+            // 3. Cliente, promociones y cupón (recalculados en servidor)
+            $clienteId = crm_cliente_por_datos($nombre, $mail, $tel);
+            $q = $pdo->prepare('SELECT COUNT(*) FROM pedidos WHERE cliente_id = ? AND estado = "entregado"');
+            $q->execute([$clienteId]);
+            $pedidosEntregados = (int)$q->fetchColumn();
+
+            $promos = mk_evaluar_promociones($lineasPromo, $sub);
+            $descuentoPromo = (int)$promos['descuento'];
+            $exclusiva = (bool)$promos['exclusiva'];
+
+            $cup = null; $descuentoCupon = 0;
             $code = s($b['cupon'] ?? '', 30);
-            if ($code !== '') {
-                [$cup, $err] = cupon($code, $sub, true);
+            if ($code !== '' && !$exclusiva) {
+                $q = $pdo->prepare('SELECT * FROM cupones WHERE codigo = ?');
+                $q->execute([strtoupper($code)]);
+                [$cup, $err, $descuentoCupon] = mk_cupon($q->fetch() ?: null, $sub, $clienteId, $pedidosEntregados);
                 req($cup !== null, (string)$err);
-                $pct = (int)$cup['pct'];
             }
-            $descuento = intdiv($sub * $pct, 100);
+            $descuento = $descuentoPromo + $descuentoCupon;
             $total = $sub - $descuento;
+            req($total >= 0, 'Descuento no válido');
 
             // 4. Pedido
-            $clienteId = crm_cliente_por_datos($nombre, $mail, $tel);
             $pdo->prepare('INSERT INTO pedidos
                     (cliente, telefono, email, ciudad, direccion, notas, subtotal, descuento, cupon, total, ip,
                      cliente_id, cliente_nombre, cliente_email, cliente_tel, envio_ciudad, envio_direccion, notas_cliente, cupon_codigo,
@@ -199,12 +220,37 @@ try {
                 req($restante === 0, 'Stock insuficiente de ' . $P[$l['id']]['nombre']);
             }
 
-            if ($cup) $pdo->prepare('UPDATE cupones SET usos = usos + 1 WHERE codigo = ?')->execute([$cup['codigo']]);
+            if ($cup) {
+                $pdo->prepare('UPDATE cupones SET usos = usos + 1 WHERE codigo = ?')->execute([$cup['codigo']]);
+                $pdo->prepare('INSERT INTO cupon_usos (cupon_codigo, pedido_id, monto) VALUES (?,?,?)')->execute([$cup['codigo'], $pid, $descuentoCupon]);
+            }
+
+            // Vincula el carrito persistente (si viene del checkout con token)
+            $carritoToken = s($b['carrito_token'] ?? '', 36);
+            if ($carritoToken !== '') {
+                $pdo->prepare('UPDATE carritos SET estado = "convertido", pedido_id = ? WHERE token = ? AND estado = "activo"')->execute([$pid, $carritoToken]);
+            }
             $pdo->commit();
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             throw $e;
         }
+
+        // Confirmación por correo con enlace a WhatsApp para completar el pago.
+        // Nunca bloquea el pedido: si el envío falla, el pedido ya quedó creado.
+        try {
+            $waTexto = rawurlencode("Hola MotoGear, quiero pagar mi pedido #$pid por $" . number_format($total, 0, ',', '.') . " a nombre de $nombre.");
+            $waLink = 'https://api.whatsapp.com/send?phone=573167800764&text=' . $waTexto;
+            $html = '<p>Hola ' . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . ',</p>'
+                . '<p>Recibimos tu pedido <strong>#' . $pid . '</strong> por <strong>$' . number_format($total, 0, ',', '.') . '</strong>.</p>'
+                . '<p>Para completar el pago, escríbenos por WhatsApp y te indicamos los pasos:</p>'
+                . '<p style="font-size:16px"><a href="' . $waLink . '">' . $waLink . '</a></p>'
+                . '<p>Gracias por comprar en MotoGear.</p>';
+            mk_enviar_correo($mail, "Tu pedido #$pid en MotoGear", $html);
+        } catch (Throwable $e) {
+            error_log('[MotoGear][correo] ' . $e->getMessage());
+        }
+
         out(['id' => $pid, 'total' => $total, 'descuento' => $descuento]);
 
     case 'mensaje':
@@ -242,6 +288,14 @@ try {
             sleep(1);
             out(['error' => 'Usuario o contraseña incorrectos'], 401);
         }
+        // 2FA: si está activo, exige el código del autenticador.
+        if (!empty($a['totp_activo'])) {
+            $codigo = (string)($b['codigo'] ?? '');
+            if (!totp_verificar((string)$a['totp_secreto'], $codigo)) {
+                db()->prepare('INSERT INTO intentos (ip) VALUES (?)')->execute([$ip]);
+                out(['error' => 'Código de verificación incorrecto'], 401);
+            }
+        }
         db()->prepare('DELETE FROM intentos WHERE ip=?')->execute([$ip]);
         session_regenerate_id(true);
         $_SESSION['uid'] = (int)$a['id'];
@@ -273,6 +327,24 @@ try {
         $_SESSION = [];
         session_destroy();
         out(['ok' => true]);
+
+    /* ---------------- SEGURIDAD (2FA) ---------------- */
+    case '2fa_estado':
+        admin();
+        out(seg_2fa_estado());
+
+    case '2fa_generar':
+        admin();
+        out(seg_2fa_generar());
+
+    case '2fa_activar':
+        req($m === 'POST', 'Método no permitido');
+        admin();
+        out(seg_2fa_activar(body()));
+
+    case '2fa_desactivar':
+        admin();
+        out(seg_2fa_desactivar());
 
     /* ---------------- BACKOFFICE · Fase 1 ---------------- */
     case 'kpis':
@@ -461,6 +533,24 @@ try {
         req($m === 'POST', 'Método no permitido');
         admin('devoluciones.editar');
         out(crm_devolucion_transicion(body()));
+
+    /* ---------------- BACKOFFICE · Fase 5 (marketing) ---------------- */
+    case 'promociones':
+        admin('promociones.ver');
+        out(mk_promociones($m === 'POST' ? body() : null));
+
+    case 'carritos':
+        admin('carritos.ver');
+        out(mk_carritos($_GET));
+
+    case 'carrito_recuperar':
+        req($m === 'POST', 'Método no permitido');
+        admin('carritos.ver');
+        out(mk_carrito_recuperar(body()));
+
+    case 'marketing_resumen':
+        admin('dashboard.ver');
+        out(mk_marketing_resumen());
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':
