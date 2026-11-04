@@ -26,7 +26,7 @@ function mk_enviar_correo(string $para, string $asunto, string $html): bool {
     $host = mk_config('smtp_host');
     $puerto = (int)mk_config('smtp_puerto', '465');
     $usuario = mk_config('smtp_usuario');
-    $clave = mk_config('smtp_clave');
+    $clave = defined('SMTP_CLAVE') ? (string)SMTP_CLAVE : mk_config('smtp_clave');
     $remitente = mk_config('smtp_remitente', $usuario);
     if ($host === '' || $usuario === '' || $clave === '' || filter_var($para, FILTER_VALIDATE_EMAIL) === false) {
         error_log('[MotoGear][correo] SMTP sin configurar o destinatario no válido');
