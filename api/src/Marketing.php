@@ -33,7 +33,7 @@ function mk_enviar_correo(string $para, string $asunto, string $html): bool {
         return false;
     }
 
-    $ctx = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
     $fp = @stream_socket_client("ssl://$host:$puerto", $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $ctx);
     if (!$fp) {
         error_log("[MotoGear][correo] conexión fallida: $errno $errstr");
