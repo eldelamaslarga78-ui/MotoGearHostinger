@@ -539,6 +539,11 @@ try {
         admin('promociones.ver');
         out(mk_promociones($m === 'POST' ? body() : null));
 
+    case 'promocion_borrar':
+        req($m === 'POST', 'Método no permitido');
+        admin('promociones.borrar');
+        out(mk_promocion_borrar((int)(body()['id'] ?? 0)));
+
     case 'carritos':
         admin('carritos.ver');
         out(mk_carritos($_GET));

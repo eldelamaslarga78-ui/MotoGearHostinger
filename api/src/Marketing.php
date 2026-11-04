@@ -210,6 +210,17 @@ function mk_evaluar_promociones(array $lineas, int $subtotal): array {
     return ['descuento' => $descuento, 'detalle' => $detalle, 'exclusiva' => $exclusivaAplicada];
 }
 
+/** Borra una promoción y su alcance (las reglas no tienen historial de pedidos). */
+function mk_promocion_borrar(int $id): array {
+    $q = db()->prepare('SELECT nombre FROM promociones WHERE id = ?');
+    $q->execute([$id]);
+    $nombre = $q->fetchColumn();
+    req($nombre !== false, 'Promoción no encontrada');
+    db()->prepare('DELETE FROM promociones WHERE id = ?')->execute([$id]);
+    auditar('promocion.borrar', 'promociones', $id, ['nombre' => (string)$nombre]);
+    return ['ok' => true];
+}
+
 function mk_promociones(?array $b = null): array {
     if ($b !== null && isset($b['data'])) {
         $d = $b['data'];
