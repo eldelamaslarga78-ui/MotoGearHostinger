@@ -86,11 +86,11 @@ afirma(lanza(fn() => chk_validar_lineas([['id' => 11, 'qty' => 2, 'talla' => 'M'
 /* -------------------------- checkout: datos ----------------------------- */
 $valido = ['nombre' => 'Juan Perez', 'telefono' => '3001234567', 'ciudad' => 'Bogota', 'direccion' => 'Calle 1 #2-3', 'email' => 'a@b.co'];
 afirma(chk_validar_datos($valido)['mail'] === 'a@b.co', 'checkout: datos válidos');
-afirma(lanza(fn() => chk_validar_datos($valido + ['web' => 'bot'])) === 'Solicitud rechazada', 'checkout: campo trampa rellenado');
-afirma(lanza(fn() => chk_validar_datos($valido + ['nombre' => 'Jo'])) === 'Escribe tu nombre completo', 'checkout: nombre corto');
-afirma(lanza(fn() => chk_validar_datos($valido + ['telefono' => '12'])) === 'Teléfono no válido', 'checkout: teléfono inválido');
+afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['web' => 'bot']))) === 'Solicitud rechazada', 'checkout: campo trampa rellenado');
+afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['nombre' => 'Jo']))) === 'Escribe tu nombre completo', 'checkout: nombre corto');
+afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['telefono' => '12']))) === 'Teléfono no válido', 'checkout: teléfono inválido');
 afirma(lanza(fn() => chk_validar_datos(array_diff_key($valido, ['email' => 1]))) !== null, 'checkout: correo obligatorio');
-afirma(lanza(fn() => chk_validar_datos($valido + ['email' => 'no-es-correo'])) !== null, 'checkout: correo con formato inválido');
+afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['email' => 'no-es-correo']))) !== null, 'checkout: correo con formato inválido');
 
 /* ----------------------- máquina de estados ----------------------------- */
 afirma(ped_permiso_transicion('pendiente_pago', 'confirmado') === 'pedidos.editar', 'estados: confirmar requiere pedidos.editar');
