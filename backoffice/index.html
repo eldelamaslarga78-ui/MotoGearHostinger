@@ -23,6 +23,10 @@
     <label for="clave">Contraseña</label>
     <input id="clave" name="clave" type="password" autocomplete="current-password" required>
 
+    <div id="acceso-2fa" hidden>
+      <label for="codigo">Código de verificación (tu app de autenticación)</label>
+      <input id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}">
+    </div>
     <button class="btn ancho" type="submit" id="btn-acceso">Entrar</button>
     <p id="acceso-error" class="error" role="alert" hidden></p>
     <a class="acceso-volver" href="../index.html">Volver a la tienda</a>

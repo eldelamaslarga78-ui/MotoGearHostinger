@@ -45,7 +45,21 @@ function mostrarAcceso(mensaje = '') {
   err.hidden = !mensaje;
   err.textContent = mensaje;
   $('#clave').value = '';
+  // El campo del código solo se oculta al empezar de cero (sin error de un intento previo).
+  if (!mensaje) {
+    $('#acceso-2fa').hidden = true;
+    $('#codigo').value = '';
+  }
   setTimeout(() => $('#usuario').focus(), 30);
+}
+
+function pedirCodigo2fa(mensaje) {
+  $('#acceso-2fa').hidden = false;
+  const err = $('#acceso-error');
+  err.hidden = false;
+  err.textContent = mensaje;
+  // La contraseña se conserva: el segundo envío la necesita junto con el código.
+  setTimeout(() => $('#codigo').focus(), 30);
 }
 
 function mostrarApp() {
@@ -281,9 +295,14 @@ function conectar() {
     const boton = $('#btn-acceso');
     boton.disabled = true;
     try {
+      const codigo = $('#acceso-2fa').hidden ? '' : $('#codigo').value.trim();
       const r = await api('login', {
-        cuerpo: { usuario: $('#usuario').value.trim(), clave: $('#clave').value },
+        cuerpo: { usuario: $('#usuario').value.trim(), clave: $('#clave').value, codigo },
       });
+      if (r.requiere_2fa) {
+        pedirCodigo2fa('Introduce el código de 6 dígitos de tu app de autenticación.');
+        return;
+      }
       setCsrf(r.csrf);
       if (!(await cargarSesion())) {
         mostrarAcceso('Este usuario no tiene acceso al backoffice.');

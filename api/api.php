@@ -113,6 +113,10 @@ try {
         // 2FA: si está activo, exige el código del autenticador.
         if (!empty($a['totp_activo'])) {
             $codigo = (string)($b['codigo'] ?? '');
+            if ($codigo === '') {
+                // Paso 1 correcto: la contraseña es válida; ahora se pide el código del autenticador.
+                out(['requiere_2fa' => true]);
+            }
             if (!totp_verificar((string)$a['totp_secreto'], $codigo)) {
                 db()->prepare('INSERT INTO intentos (ip) VALUES (?)')->execute([$ip]);
                 out(['error' => 'Código de verificación incorrecto'], 401);
