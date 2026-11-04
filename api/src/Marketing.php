@@ -343,8 +343,7 @@ function mk_carrito_recuperar(array $b): array {
 
     $enlace = 'https://ecomerce.sebasdigital.site/carrito.html?token=' . urlencode($c['token']);
     $html = '<p>Hola,</p><p>Dejaste artículos en tu carrito de MotoGear. Recupéralos aquí:</p><p><a href="' . $enlace . '">' . $enlace . '</a></p>';
-    mk_enviar_correo((string)$c['email'], 'Tu carrito te espera en MotoGear', $html);
-
+    ob_encolar('correo', ['para' => (string)$c['email'], 'asunto' => 'Tu carrito te espera en MotoGear', 'html' => $html]);
     db()->prepare('UPDATE carritos SET estado = "recuperado", recordatorios = recordatorios + 1 WHERE id = ?')->execute([$id]);
     auditar('carrito.recuperar', 'carritos', $id, ['email' => (string)$c['email']]);
     return ['ok' => true];
@@ -378,9 +377,17 @@ function mk_enviar_recordatorios(): int {
     foreach ($q->fetchAll() as $c) {
         $enlace = 'https://ecomerce.sebasdigital.site/carrito.html?token=' . urlencode($c['token']);
         $html = '<p>Hola,</p><p>Dejaste artículos en tu carrito de MotoGear. Recupéralos aquí:</p><p><a href="' . $enlace . '">' . $enlace . '</a></p>';
-        if (mk_enviar_correo((string)$c['email'], 'Tu carrito te espera en MotoGear', $html)) {
-            db()->prepare('UPDATE carritos SET recordatorios = 1 WHERE id = ?')->execute([(int)$c['id']]);
+        // Se encola y se marca en la misma transacción: nunca se envía dos veces.
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            ob_encolar('correo', ['para' => (string)$c['email'], 'asunto' => 'Tu carrito te espera en MotoGear', 'html' => $html]);
+            $pdo->prepare('UPDATE carritos SET recordatorios = 1 WHERE id = ?')->execute([(int)$c['id']]);
+            $pdo->commit();
             $n++;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
         }
     }
     return $n;

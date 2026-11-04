@@ -9,6 +9,7 @@ require __DIR__ . '/src/CRM.php';
 require __DIR__ . '/src/Marketing.php';
 require __DIR__ . '/src/Seguridad.php';
 require __DIR__ . '/src/Checkout.php';
+require __DIR__ . '/src/Outbox.php';
 
 class UserError extends Exception {}
 function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }

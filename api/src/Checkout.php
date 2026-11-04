@@ -158,20 +158,19 @@ function chk_registrar_cupon_y_carrito(PDO $pdo, int $pid, array $desc, string $
     }
 }
 
-/** 7. Notificación (fuera de la transacción). Nunca bloquea el pedido. */
-function chk_notificar(int $pid, string $nombre, string $mail, int $total): void {
-    try {
-        $waTexto = rawurlencode("Hola MotoGear, quiero pagar mi pedido #$pid por $" . number_format($total, 0, ',', '.') . " a nombre de $nombre.");
-        $waLink = 'https://api.whatsapp.com/send?phone=573167800764&text=' . $waTexto;
-        $html = '<p>Hola ' . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . ',</p>'
-            . '<p>Recibimos tu pedido <strong>#' . $pid . '</strong> por <strong>$' . number_format($total, 0, ',', '.') . '</strong>.</p>'
-            . '<p>Para completar el pago, escríbenos por WhatsApp y te indicamos los pasos:</p>'
-            . '<p style="font-size:16px"><a href="' . $waLink . '">' . $waLink . '</a></p>'
-            . '<p>Gracias por comprar en MotoGear.</p>';
-        mk_enviar_correo($mail, "Tu pedido #$pid en MotoGear", $html);
-    } catch (Throwable $e) {
-        error_log('[MotoGear][correo] ' . $e->getMessage());
-    }
+/**
+ * 7. Confirmación por correo: se guarda en el outbox DENTRO de la transacción.
+ * El cron la envía; el pedido nunca depende del SMTP.
+ */
+function chk_encolar_confirmacion(int $pid, string $nombre, string $mail, int $total): void {
+    $waTexto = rawurlencode("Hola MotoGear, quiero pagar mi pedido #$pid por $" . number_format($total, 0, ',', '.') . " a nombre de $nombre.");
+    $waLink = 'https://api.whatsapp.com/send?phone=573167800764&text=' . $waTexto;
+    $html = '<p>Hola ' . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . ',</p>'
+        . '<p>Recibimos tu pedido <strong>#' . $pid . '</strong> por <strong>$' . number_format($total, 0, ',', '.') . '</strong>.</p>'
+        . '<p>Para completar el pago, escríbenos por WhatsApp y te indicamos los pasos:</p>'
+        . '<p style="font-size:16px"><a href="' . $waLink . '">' . $waLink . '</a></p>'
+        . '<p>Gracias por comprar en MotoGear.</p>';
+    ob_encolar('correo', ['para' => $mail, 'asunto' => "Tu pedido #$pid en MotoGear", 'html' => $html]);
 }
 
 /** Punto de entrada del checkout. Devuelve la respuesta JSON. */
@@ -205,12 +204,12 @@ function chk_crear(array $b, string $ip, string $idem): array {
         $pid = chk_insertar_pedido($pdo, $d, $sub, $desc, $clienteId, $ip, $idem);
         chk_reservar_stock($pdo, $pid, $lineas, $V, $P);
         chk_registrar_cupon_y_carrito($pdo, $pid, $desc, s($b['carrito_token'] ?? '', 36));
+        chk_encolar_confirmacion($pid, $d['nombre'], $d['mail'], $desc['total']);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $e;
     }
 
-    chk_notificar($pid, $d['nombre'], $d['mail'], $desc['total']);
     return ['id' => $pid, 'total' => $desc['total'], 'descuento' => $desc['descuento']];
 }

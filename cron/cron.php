@@ -39,6 +39,7 @@ require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Metricas.php';
 require __DIR__ . '/../api/src/Pedidos.php';
 require __DIR__ . '/../api/src/CRM.php';
+require __DIR__ . '/../api/src/Outbox.php';
 require __DIR__ . '/../api/src/Marketing.php';
 
 $inicio = microtime(true);
@@ -51,9 +52,10 @@ try {
     $expirados = ped_expirar_pendientes();
     $abandonos = mk_marcar_abandonos();
     $recordatorios = mk_enviar_recordatorios();
+    [$correosOk, $correosFallidos, $correosReintento] = ob_procesar(20);
 
     printf(
-        "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d expirados=%d abandonos=%d recordatorios=%d %.0fms\n",
+        "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d expirados=%d abandonos=%d recordatorios=%d correos_enviados=%d correos_fallidos=%d correos_reintento=%d %.0fms\n",
         $snapshots,
         $cache,
         (int)$visitas,
@@ -61,6 +63,9 @@ try {
         $expirados,
         $abandonos,
         $recordatorios,
+        $correosOk,
+        $correosFallidos,
+        $correosReintento,
         (microtime(true) - $inicio) * 1000
     );
 } catch (Throwable $e) {
