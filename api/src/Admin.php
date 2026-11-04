@@ -40,7 +40,7 @@ function adm_usuario_guardar(array $b): array {
     $usuario = s($d['usuario'] ?? '', 40);
     $email = strtolower(s($d['email'] ?? '', 120));
     $rolId = (int)($d['rol_id'] ?? 0);
-    $activo = !empty($d['activo']) ? 1 : 0;
+    $activo = array_key_exists('activo', $d) ? (!empty($d['activo']) ? 1 : 0) : 1;
     $clave = (string)($d['clave'] ?? '');
     $yo = (int)($_SESSION['uid'] ?? 0);
 
