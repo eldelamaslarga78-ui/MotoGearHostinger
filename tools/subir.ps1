@@ -76,7 +76,7 @@ $extTexto = @('.html', '.htm', '.css', '.js', '.mjs', '.php', '.json', '.svg',
 $extWeb = $extTexto + @('.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico', '.avif',
     '.woff', '.woff2', '.ttf', '.otf', '.pdf')
 
-$carpetasExcluidas = @('.git/', '.vscode/', 'tools/', 'sql/', 'node_modules/')
+$carpetasExcluidas = @('.git/', '.vscode/', 'tools/', 'tests/', 'sql/', 'node_modules/')
 $archivosExcluidos = @('prueba.js', 'api/config.local.php.ejemplo',
     'README.md', '.gitignore', '.gitattributes')
 if (-not $ConDocs) { $carpetasExcluidas += 'docs/' }

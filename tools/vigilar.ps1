@@ -26,7 +26,7 @@ $ErrorActionPreference = 'Continue'
 $raiz = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $subir = Join-Path $PSScriptRoot 'subir.ps1'
 
-$carpetasIgnoradas = @('.git', '.vscode', 'tools', 'docs', 'sql', 'node_modules')
+$carpetasIgnoradas = @('.git', '.vscode', 'tools', 'tests', 'docs', 'sql', 'node_modules')
 $extWeb = @('.html', '.htm', '.css', '.js', '.mjs', '.php', '.json', '.svg',
     '.txt', '.xml', '.md', '.webmanifest', '.map', '.csv', '.png', '.jpg',
     '.jpeg', '.webp', '.gif', '.ico', '.avif', '.woff', '.woff2', '.ttf',
