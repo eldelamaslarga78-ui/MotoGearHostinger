@@ -177,7 +177,7 @@ try {
             $cup = null; $descuentoCupon = 0;
             $code = s($b['cupon'] ?? '', 30);
             if ($code !== '' && !$exclusiva) {
-                $q = $pdo->prepare('SELECT * FROM cupones WHERE codigo = ?');
+                $q = $pdo->prepare('SELECT * FROM cupones WHERE codigo = ? FOR UPDATE');
                 $q->execute([strtoupper($code)]);
                 [$cup, $err, $descuentoCupon] = mk_cupon($q->fetch() ?: null, $sub, $clienteId, $pedidosEntregados);
                 req($cup !== null, (string)$err);

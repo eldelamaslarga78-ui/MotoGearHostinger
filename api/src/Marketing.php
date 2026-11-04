@@ -130,6 +130,7 @@ function mk_evaluar_promociones(array $lineas, int $subtotal): array {
     $promos = db()->query('SELECT * FROM promociones WHERE activa = 1 AND (desde IS NULL OR desde <= NOW()) AND (hasta IS NULL OR hasta >= NOW()) ORDER BY prioridad, id')->fetchAll();
     $descuento = 0;
     $detalle = [];
+    $exclusivaAplicada = false;
 
     foreach ($promos as $p) {
         $cond = json_decode((string)$p['condiciones'], true) ?: [];
@@ -201,11 +202,12 @@ function mk_evaluar_promociones(array $lineas, int $subtotal): array {
             $descuento += $d;
             $detalle[] = ['nombre' => (string)$p['nombre'], 'descuento' => $d];
             if ((int)$p['exclusiva']) {
+                $exclusivaAplicada = true;
                 break; // las exclusivas no se acumulan con más promociones ni cupones
             }
         }
     }
-    return ['descuento' => $descuento, 'detalle' => $detalle, 'exclusiva' => !empty($detalle) && !empty($promos) && (bool)$promos[0]['exclusiva']];
+    return ['descuento' => $descuento, 'detalle' => $detalle, 'exclusiva' => $exclusivaAplicada];
 }
 
 function mk_promociones(?array $b = null): array {
