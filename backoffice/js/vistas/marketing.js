@@ -43,7 +43,7 @@ async function verCupones() {
     <div class="tarjeta-cab"><h3>Nuevo cupón</h3></div>
     <div class="form-grid">
       <div class="campo-bloque"><label>Código</label><input class="campo" id="cp-codigo" placeholder="EJEMPLO10"></div>
-      <div class="campo-bloque"><label>Tipo</label><select class="campo" id="cp-tipo"><option value="pct">Porcentaje</option><option value="fijo">Monto fijo</option></select></div>
+      <div class="campo-bloque"><label>Tipo</label><select class="campo" id="cp-tipo"><option value="pct">Porcentaje</option><option value="fijo">Monto fijo</option><option value="envio_gratis">Envío gratis</option></select></div>
       <div class="campo-bloque"><label>Valor</label><input class="campo" id="cp-valor" type="number" min="0"></div>
       <div class="campo-bloque"><label>Compra mínima</label><input class="campo" id="cp-minimo" type="number" min="0" value="0"></div>
       <div class="campo-bloque"><label>Vence (YYYY-MM-DD)</label><input class="campo" id="cp-vence"></div>
@@ -115,7 +115,7 @@ function conectar() {
       const usos = raiz.querySelector('#cp-usos').value;
       const activo = raiz.querySelector('#cp-activo').checked;
       try {
-        await api('guardar', { cuerpo: { tipo: 'cupon', data: { codigo, pct: tipo === 'pct' ? valor : 0, minimo, vence, usos_max: usos === '' ? null : Number(usos), activo } } });
+        await api('guardar', { cuerpo: { tipo: 'cupon', data: { codigo, tipo, valor, minimo, vence, usos_max: usos === '' ? null : Number(usos), activo } } });
         toast('Cupón creado'); render();
       } catch (err) { toast(err.message, 'error'); }
       return;

@@ -650,16 +650,22 @@ try {
             }
 
         } elseif ($tipo === 'cupon') {
-            $cod = strtoupper(s($d['codigo'] ?? '', 30)); $pct = (int)($d['pct'] ?? 0);
+            $cod = strtoupper(s($d['codigo'] ?? '', 30));
+            $tipoCupon = in_array($d['tipo'] ?? 'pct', ['pct', 'fijo', 'envio_gratis'], true) ? (string)($d['tipo'] ?? 'pct') : 'pct';
+            $valor = (int)($d['valor'] ?? $d['pct'] ?? 0);
             $vence = s($d['vence'] ?? '', 10);
             $umax = ($d['usos_max'] ?? '') === '' || $d['usos_max'] === null ? null : max(1, (int)$d['usos_max']);
+            $maxCli = ($d['max_por_cliente'] ?? '') === '' || $d['max_por_cliente'] === null ? null : max(1, (int)$d['max_por_cliente']);
             req(preg_match('/^[A-Z0-9_-]{3,30}$/', $cod) === 1, 'Código: 3-30 letras o números, sin espacios');
-            req($pct >= 1 && $pct <= 100, 'El descuento debe estar entre 1 y 100');
+            if ($tipoCupon === 'pct') req($valor >= 1 && $valor <= 100, 'El descuento debe estar entre 1 y 100');
+            if ($tipoCupon === 'fijo') req($valor >= 1, 'El monto fijo debe ser mayor a 0');
             req($vence === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $vence) === 1, 'Fecha no válida');
-            $pdo->prepare('INSERT INTO cupones (codigo,pct,activo,vence,minimo,usos_max) VALUES (?,?,?,?,?,?)
-                           ON DUPLICATE KEY UPDATE pct=VALUES(pct), activo=VALUES(activo), vence=VALUES(vence), minimo=VALUES(minimo), usos_max=VALUES(usos_max)')
-                ->execute([$cod, $pct, !empty($d['activo']) ? 1 : 0, $vence === '' ? null : $vence, max(0, (int)($d['minimo'] ?? 0)), $umax]);
-            auditar('cupon.guardar', 'cupones', null, ['codigo' => $cod, 'pct' => $pct, 'activo' => !empty($d['activo'])]);
+            $pdo->prepare('INSERT INTO cupones (codigo,tipo,valor,pct,activo,vence,minimo,usos_max,max_por_cliente,primera_compra) VALUES (?,?,?,?,?,?,?,?,?,?)
+                           ON DUPLICATE KEY UPDATE tipo=VALUES(tipo), valor=VALUES(valor), pct=VALUES(pct), activo=VALUES(activo), vence=VALUES(vence),
+                           minimo=VALUES(minimo), usos_max=VALUES(usos_max), max_por_cliente=VALUES(max_por_cliente), primera_compra=VALUES(primera_compra)')
+                ->execute([$cod, $tipoCupon, $valor, $tipoCupon === 'pct' ? $valor : 0, !empty($d['activo']) ? 1 : 0, $vence === '' ? null : $vence,
+                    max(0, (int)($d['minimo'] ?? 0)), $umax, $maxCli, !empty($d['primera_compra']) ? 1 : 0]);
+            auditar('cupon.guardar', 'cupones', null, ['codigo' => $cod, 'tipo' => $tipoCupon, 'valor' => $valor, 'activo' => !empty($d['activo'])]);
         } else {
             req(false, 'Tipo no válido');
         }
