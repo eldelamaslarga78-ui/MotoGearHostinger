@@ -39,6 +39,7 @@ require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Metricas.php';
 require __DIR__ . '/../api/src/Pedidos.php';
 require __DIR__ . '/../api/src/CRM.php';
+require __DIR__ . '/../api/src/Util.php';
 require __DIR__ . '/../api/src/Outbox.php';
 require __DIR__ . '/../api/src/Marketing.php';
 

@@ -11,14 +11,7 @@ require __DIR__ . '/src/Seguridad.php';
 require __DIR__ . '/src/Checkout.php';
 require __DIR__ . '/src/Outbox.php';
 
-class UserError extends Exception {}
-function req(bool $ok, string $msg): void { if (!$ok) throw new UserError($msg); }
-function s($v, int $max): string { return mb_substr(trim((string)$v), 0, $max); }
-function slug(string $t): string {
-    $t = @iconv('UTF-8', 'ASCII//TRANSLIT', $t) ?: $t;
-    return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($t)), '-');
-}
-function ph(int $n): string { return implode(',', array_fill(0, $n, '?')); }
+require __DIR__ . '/src/Util.php';
 
 /** Tallas y stock disponible de cada producto: [id => [['talla'=>'M','stock'=>3], ...]] */
 function tallas_de(array $ids): array {
