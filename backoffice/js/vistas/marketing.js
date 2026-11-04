@@ -62,7 +62,7 @@ async function verCupones() {
       ? `<div class="tabla-wrap"><table class="tabla"><thead><tr><th>Código</th><th>Tipo</th><th class="num">Valor</th><th class="num">Usos</th><th>Estado</th><th></th></tr></thead><tbody>${cuponesCache.map((cp) => `<tr>
         <td data-etiqueta="Código">${esc(cp.codigo)}</td>
         <td data-etiqueta="Tipo">${esc(cp.tipo || 'pct')}</td>
-        <td class="num" data-etiqueta="Valor">${esc(cp.tipo === 'fijo' ? money(cp.valor) : (cp.valor || cp.pct) + '%')}</td>
+        <td class="num" data-etiqueta="Valor">${esc(cp.tipo === 'fijo' ? money(cp.valor) : cp.tipo === 'envio_gratis' ? 'Envío gratis' : (cp.valor || cp.pct) + '%')}</td>
         <td class="num" data-etiqueta="Usos">${numero(cp.usos)}${cp.usos_max ? '/' + numero(cp.usos_max) : ''}</td>
         <td data-etiqueta="Estado">${Number(cp.activo) ? '<span class="estado est-activo">Activo</span>' : '<span class="estado est-inactivo">Inactivo</span>'}</td>
         <td data-etiqueta="Acciones">
