@@ -10,6 +10,7 @@ require __DIR__ . '/src/Marketing.php';
 require __DIR__ . '/src/Seguridad.php';
 require __DIR__ . '/src/Checkout.php';
 require __DIR__ . '/src/Outbox.php';
+require __DIR__ . '/src/Admin.php';
 
 require __DIR__ . '/src/Util.php';
 
@@ -377,6 +378,33 @@ try {
     case 'marketing_resumen':
         admin('dashboard.ver');
         out(mk_marketing_resumen());
+
+    /* ---------------- BACKOFFICE · Administración (migración del panel anterior) ---------------- */
+    case 'mensajes':
+        admin('mensajes.ver');
+        out(adm_mensajes($_GET));
+
+    case 'usuarios':
+        admin('usuarios.gestionar');
+        out(['items' => adm_usuarios(), 'roles' => adm_roles()]);
+
+    case 'usuario_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('usuarios.gestionar');
+        out(adm_usuario_guardar(body()));
+
+    case 'auditoria':
+        admin('auditoria.ver');
+        out(adm_auditoria($_GET));
+
+    case 'configuracion':
+        admin('config.editar');
+        out(adm_configuracion());
+
+    case 'configuracion_guardar':
+        req($m === 'POST', 'Método no permitido');
+        admin('config.editar');
+        out(adm_configuracion_guardar(body()));
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':
