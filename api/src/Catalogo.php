@@ -585,7 +585,8 @@ function cat_imagen_subir(): array {
     imagepalettetotruecolor($im);
 
     $base = bin2hex(random_bytes(8));
-    $dir = dirname(__DIR__) . '/img/productos/' . $productoId;
+    // __DIR__ es api/src: la raíz del sitio está dos niveles arriba.
+    $dir = dirname(__DIR__, 2) . '/img/productos/' . $productoId;
     if (!is_dir($dir)) mkdir($dir, 0755, true);
 
     foreach ([1600, 800, 400] as $ancho) {
@@ -662,8 +663,15 @@ function cat_imagen_borrar(array $b): array {
     db()->prepare('DELETE FROM producto_imagenes WHERE id = ?')->execute([$id]);
 
     $prefijo = preg_replace('/-800\.webp$/', '', (string)$img['ruta']);
-    $abs = dirname(__DIR__) . '/' . str_replace('./', '', $prefijo);
-    foreach ([400, 800, 1600] as $w) { @unlink("$abs-$w.webp"); }
+    $rel = str_replace('./', '', $prefijo);
+    // __DIR__ es api/src: los archivos viven en la raíz del sitio. Se prueba
+    // también la ruta antigua (api/img) para poder limpiar subidas viejas.
+    $base = dirname(__DIR__, 2) . '/' . $rel;
+    $baseVieja = dirname(__DIR__) . '/' . $rel;
+    foreach ([400, 800, 1600] as $w) {
+        @unlink("$base-$w.webp");
+        @unlink("$baseVieja-$w.webp");
+    }
 
     if ($fuePrincipal) {
         $q = db()->prepare('SELECT id FROM producto_imagenes WHERE producto_id = ? ORDER BY orden, id LIMIT 1');
