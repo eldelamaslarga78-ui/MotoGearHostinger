@@ -2,7 +2,7 @@
 
 import { api, csrfToken } from '../api.js';
 import { toast } from '../ui/toast.js';
-import { esc, money, numero } from '../formato.js';
+import { esc, numero } from '../formato.js';
 import { panelError } from '../ui/skeleton.js';
 
 const imgSrc = (r) => (r ? String(r).replace(/^\.\//, '../') : '');
@@ -24,14 +24,40 @@ let imagenes = [];
 let categorias = [];
 let pestaña = 'general';
 let ajusteAbierto = null;   // id de variante con el formulario de ajuste abierto
+let borrador = {};          // valores ya escritos, aunque su pestaña no esté visible
 
 /* ------------------------------ utilidades ------------------------------ */
 
 const $id = (i) => raiz.querySelector('#' + i);
-const val = (i) => {
-  const el = raiz.querySelector('[data-campo="' + i + '"]');
-  return el ? el.value : '';
-};
+
+/**
+ * Solo hay una pestaña en el DOM a la vez. Antes de cambiar de pestaña se
+ * guardan sus campos en `borrador`, para que al guardar no se pierdan.
+ */
+function leerPanel() {
+  const out = {};
+  // Solo campos del producto: los de la tabla de variantes llevan data-id.
+  raiz.querySelectorAll('#producto-panel [data-campo]:not([data-id])').forEach((el) => {
+    out[el.dataset.campo] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  return out;
+}
+
+/** Valor de un campo: borrador → producto guardado → valor por defecto. */
+function valor(k, def = '') {
+  if (borrador[k] !== undefined) return borrador[k];
+  if (producto && producto[k] !== undefined && producto[k] !== null) return producto[k];
+  return def;
+}
+
+/** Cambia de pestaña avisando del campo que falta. */
+function irA(tab, mensaje) {
+  pestaña = tab;
+  render();
+  toast(mensaje, 'error');
+  const primero = raiz.querySelector('#producto-panel .campo');
+  if (primero) primero.focus();
+}
 
 /* ------------------------------ plantillas ------------------------------ */
 
@@ -56,61 +82,62 @@ function pestanas() {
 }
 
 function opcionesCategorias() {
-  return categorias.map((c) => `<option value="${esc(c.id)}"${producto && producto.categoria_id === c.id ? ' selected' : ''}>${esc(c.nombre)}</option>`).join('');
+  const actual = String(valor('categoria_id', ''));
+  return categorias.map((c) => `<option value="${esc(c.id)}"${actual === String(c.id) ? ' selected' : ''}>${esc(c.nombre)}</option>`).join('');
 }
 
 function panelGeneral() {
-  const p = producto || {};
   return `<div class="form-grid">
     <div class="campo-bloque ancho"><label for="f-nombre">Nombre</label>
-      <input class="campo" id="f-nombre" data-campo="nombre" value="${esc(p.nombre || '')}"></div>
+      <input class="campo" id="f-nombre" data-campo="nombre" value="${esc(valor('nombre'))}" required></div>
     <div class="campo-bloque"><label for="f-sku">SKU</label>
-      <input class="campo" id="f-sku" data-campo="sku" value="${esc(p.sku || '')}" placeholder="Auto"></div>
+      <input class="campo" id="f-sku" data-campo="sku" value="${esc(valor('sku'))}" placeholder="Auto"></div>
     <div class="campo-bloque"><label for="f-slug">Slug</label>
-      <input class="campo" id="f-slug" data-campo="slug" value="${esc(p.slug || '')}" placeholder="Auto"></div>
+      <input class="campo" id="f-slug" data-campo="slug" value="${esc(valor('slug'))}" placeholder="Auto"></div>
     <div class="campo-bloque"><label for="f-categoria">Categoría</label>
       <select class="campo" id="f-categoria" data-campo="categoria_id"><option value="">—</option>${opcionesCategorias()}</select></div>
     <div class="campo-bloque"><label for="f-marca">Marca</label>
-      <input class="campo" id="f-marca" data-campo="marca" value="${esc(p.marca || '')}"></div>
+      <input class="campo" id="f-marca" data-campo="marca" value="${esc(valor('marca'))}"></div>
     <div class="campo-bloque"><label for="f-badge">Etiqueta</label>
-      <input class="campo" id="f-badge" data-campo="badge" value="${esc(p.badge || '')}"></div>
+      <input class="campo" id="f-badge" data-campo="badge" value="${esc(valor('badge'))}"></div>
     <div class="campo-bloque"><label for="f-badge-tipo">Tipo de etiqueta</label>
       <select class="campo" id="f-badge-tipo" data-campo="badge_tipo">
         <option value="">Sin oferta</option>
-        <option value="oferta"${(p.badge_tipo === 'oferta') ? ' selected' : ''}>Oferta</option>
+        <option value="oferta"${valor('badge_tipo') === 'oferta' ? ' selected' : ''}>Oferta</option>
       </select></div>
     <div class="campo-bloque ancho"><label for="f-descr">Descripción corta</label>
-      <input class="campo" id="f-descr" data-campo="descr" value="${esc(p.descr || '')}"></div>
+      <input class="campo" id="f-descr" data-campo="descr" value="${esc(valor('descr'))}"></div>
     <div class="campo-bloque ancho"><label for="f-descr-larga">Descripción larga</label>
-      <textarea class="campo" id="f-descr-larga" data-campo="descr_larga">${esc(p.descr_larga || '')}</textarea></div>
-    <div class="campo-bloque"><label><input type="checkbox" data-campo="destacado" ${p.destacado ? 'checked' : ''}> Destacado</label></div>
-    <div class="campo-bloque"><label><input type="checkbox" data-campo="activo" ${p.activo === undefined || p.activo ? 'checked' : ''}> Activo</label></div>
+      <textarea class="campo" id="f-descr-larga" data-campo="descr_larga">${esc(valor('descr_larga'))}</textarea></div>
+    <div class="campo-bloque"><label><input type="checkbox" data-campo="destacado" ${valor('destacado', false) ? 'checked' : ''}> Destacado</label></div>
+    <div class="campo-bloque"><label><input type="checkbox" data-campo="activo" ${valor('activo', true) ? 'checked' : ''}> Activo</label></div>
   </div>`;
 }
 
 function panelPrecios() {
-  const p = producto || {};
-  const margen = p.costo && p.precio ? Math.round((p.precio - p.costo) * 100 / p.precio) : null;
+  const costo = Number(valor('costo', '') || 0);
+  const precio = Number(valor('precio', 0) || 0);
+  const margen = costo > 0 && precio > 0 ? Math.round((precio - costo) * 100 / precio) : null;
   return `<div class="form-grid">
     <div class="campo-bloque"><label for="f-precio">Precio (COP)</label>
-      <input class="campo" id="f-precio" data-campo="precio" type="number" min="0" value="${p.precio || 0}"></div>
+      <input class="campo" id="f-precio" data-campo="precio" type="number" min="0" step="1" value="${esc(valor('precio', 0))}"></div>
     <div class="campo-bloque"><label for="f-precio-antes">Precio anterior</label>
-      <input class="campo" id="f-precio-antes" data-campo="precio_antes" type="number" min="0" value="${p.precio_antes ?? ''}" placeholder="Sin tachar"></div>
+      <input class="campo" id="f-precio-antes" data-campo="precio_antes" type="number" min="0" value="${esc(valor('precio_antes', ''))}" placeholder="Sin tachar"></div>
     <div class="campo-bloque"><label for="f-costo">Costo</label>
-      <input class="campo" id="f-costo" data-campo="costo" type="number" min="0" value="${p.costo ?? ''}" placeholder="Para calcular margen"></div>
+      <input class="campo" id="f-costo" data-campo="costo" type="number" min="0" value="${esc(valor('costo', ''))}" placeholder="Para calcular margen"></div>
     <div class="campo-bloque"><label for="f-iva">IVA (%)</label>
-      <input class="campo" id="f-iva" data-campo="iva_pct" type="number" step="0.01" min="0" max="100" value="${p.iva_pct ?? 19}"></div>
+      <input class="campo" id="f-iva" data-campo="iva_pct" type="number" step="0.01" min="0" max="100" value="${esc(valor('iva_pct', 19))}"></div>
     <div class="campo-bloque"><label for="f-peso">Peso (g)</label>
-      <input class="campo" id="f-peso" data-campo="peso_g" type="number" min="0" value="${p.peso_g || 0}"></div>
+      <input class="campo" id="f-peso" data-campo="peso_g" type="number" min="0" value="${esc(valor('peso_g', 0))}"></div>
     <div class="campo-bloque ancho"><p class="nota">Margen:
       ${margen === null ? '—' : `<span class="${margen >= 0 ? 'margen-ok' : 'margen-mal'}">${margen} %</span>`}
     </p></div>
     <div class="campo-bloque"><label for="f-alto">Alto (mm)</label>
-      <input class="campo" id="f-alto" data-campo="alto_mm" type="number" min="0" value="${p.alto_mm || 0}"></div>
+      <input class="campo" id="f-alto" data-campo="alto_mm" type="number" min="0" value="${esc(valor('alto_mm', 0))}"></div>
     <div class="campo-bloque"><label for="f-ancho">Ancho (mm)</label>
-      <input class="campo" id="f-ancho" data-campo="ancho_mm" type="number" min="0" value="${p.ancho_mm || 0}"></div>
+      <input class="campo" id="f-ancho" data-campo="ancho_mm" type="number" min="0" value="${esc(valor('ancho_mm', 0))}"></div>
     <div class="campo-bloque"><label for="f-largo">Largo (mm)</label>
-      <input class="campo" id="f-largo" data-campo="largo_mm" type="number" min="0" value="${p.largo_mm || 0}"></div>
+      <input class="campo" id="f-largo" data-campo="largo_mm" type="number" min="0" value="${esc(valor('largo_mm', 0))}"></div>
   </div>`;
 }
 
@@ -192,9 +219,8 @@ function panelMultimedia() {
 }
 
 function panelSeo() {
-  const p = producto || {};
-  const t = p.meta_titulo || '';
-  const d = p.meta_desc || '';
+  const t = String(valor('meta_titulo'));
+  const d = String(valor('meta_desc'));
   return `<div class="form-grid">
     <div class="campo-bloque"><label for="s-titulo">Título SEO <span class="nota">(${t.length}/70)</span></label>
       <input class="campo" id="s-titulo" data-campo="meta_titulo" maxlength="70" value="${esc(t)}"></div>
@@ -202,9 +228,9 @@ function panelSeo() {
       <input class="campo" id="s-desc" data-campo="meta_desc" maxlength="160" value="${esc(d)}"></div>
     <div class="campo-bloque ancho"><label>Vista previa</label>
       <div class="previa-seo">
-        <div class="p-titulo">${esc(t || p.nombre || 'Nombre del producto')}</div>
-        <div class="p-url">ecomerce.sebasdigital.site/productos/${esc(p.slug || '')}</div>
-        <div class="p-desc">${esc(d || p.descr || '')}</div>
+        <div class="p-titulo">${esc(t || valor('nombre') || 'Nombre del producto')}</div>
+        <div class="p-url">ecomerce.sebasdigital.site/productos/${esc(valor('slug'))}</div>
+        <div class="p-desc">${esc(d || valor('descr'))}</div>
       </div>
     </div>
   </div>`;
@@ -256,6 +282,7 @@ async function recargar() {
   producto = d.producto;
   variantes = d.variantes;
   imagenes = d.imagenes;
+  borrador = {};   // lo guardado pasa a ser la fuente de verdad
   render();
 }
 
@@ -267,38 +294,62 @@ function render() {
 /* ------------------------------- acciones ------------------------------- */
 
 function recolectar() {
-  const num = (k) => {
-    const v = val(k);
-    return v === '' ? null : Number(v);
+  // Une lo escrito en la pestaña actual con las ya visitadas y con el producto
+  // guardado: ningún campo se pierde por el simple hecho de no estar visible.
+  Object.assign(borrador, leerPanel());
+
+  const txt = (k) => {
+    const v = valor(k, '');
+    return v === null || v === undefined ? '' : String(v).trim();
   };
+  const num = (k) => {
+    const v = valor(k, '');
+    if (v === '' || v === null || v === undefined) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const entero = (k) => { const n = num(k); return n === null ? 0 : Math.max(0, Math.trunc(n)); };
+  const iva = num('iva_pct');
+
   return {
     id: productoId ?? 0,
-    nombre: val('nombre'),
-    sku: val('sku'),
-    slug: val('slug'),
-    categoria_id: val('categoria_id'),
-    marca: val('marca'),
-    badge: val('badge'),
-    badge_tipo: val('badge_tipo'),
-    descr: val('descr'),
-    descr_larga: val('descr_larga'),
-    precio: Number(val('precio') || 0),
+    nombre: txt('nombre'),
+    sku: txt('sku'),
+    slug: txt('slug'),
+    categoria_id: txt('categoria_id'),
+    marca: txt('marca'),
+    badge: txt('badge'),
+    badge_tipo: txt('badge_tipo'),
+    descr: txt('descr'),
+    descr_larga: txt('descr_larga'),
+    precio: entero('precio'),
     precio_antes: num('precio_antes'),
     costo: num('costo'),
-    iva_pct: val('iva_pct') === '' ? 19 : Number(val('iva_pct')),
-    peso_g: Number(val('peso_g') || 0),
-    alto_mm: Number(val('alto_mm') || 0),
-    ancho_mm: Number(val('ancho_mm') || 0),
-    largo_mm: Number(val('largo_mm') || 0),
-    meta_titulo: val('meta_titulo'),
-    meta_desc: val('meta_desc'),
-    destacado: (raiz.querySelector('[data-campo="destacado"]') || {}).checked,
-    activo: (raiz.querySelector('[data-campo="activo"]') || {}).checked,
+    iva_pct: iva === null ? 19 : iva,
+    peso_g: entero('peso_g'),
+    alto_mm: entero('alto_mm'),
+    ancho_mm: entero('ancho_mm'),
+    largo_mm: entero('largo_mm'),
+    meta_titulo: txt('meta_titulo'),
+    meta_desc: txt('meta_desc'),
+    destacado: Boolean(valor('destacado', false)),
+    activo: Boolean(valor('activo', true)),
   };
 }
 
 async function guardar() {
   const data = recolectar();
+
+  // Validación en el navegador: lleva a la pestaña del campo que falta,
+  // en lugar de dejar que el servidor rechace un campo que no se ve.
+  if (!data.nombre) { irA('general', 'Escribe el nombre del producto'); return; }
+  if (!data.categoria_id) { irA('general', 'Elige una categoría'); return; }
+  if (!(data.precio > 0)) { irA('precios', 'El precio debe ser mayor a 0'); return; }
+  if (data.precio_antes !== null && data.precio_antes <= data.precio) {
+    irA('precios', 'El precio anterior debe ser mayor que el precio');
+    return;
+  }
+
   try {
     const r = await api('producto_guardar', { cuerpo: { data } });
     toast(productoId ? 'Producto guardado' : 'Producto creado');
@@ -399,7 +450,13 @@ function conectar() {
       return;
     }
     if (accion === 'guardar') { guardar(); return; }
-    if (accion === 'pestaña') { pestaña = btn.dataset.pestaña; render(); return; }
+    if (accion === 'pestaña') {
+      // Guarda lo escrito en la pestaña actual antes de ocultarla.
+      Object.assign(borrador, leerPanel());
+      pestaña = btn.dataset.pestaña;
+      render();
+      return;
+    }
     if (accion === 'generar-matriz') { generarMatriz(); return; }
     if (accion === 'preset-tallas') { $id('m-tallas').value = 'S, M, L, XL'; return; }
     if (accion === 'variante-guardar') { varianteGuardar(id); return; }
@@ -448,6 +505,7 @@ export default {
     producto = null;
     variantes = [];
     imagenes = [];
+    borrador = {};
 
     raiz.innerHTML = '<div class="tarjeta"><div class="esqueleto"><div class="esqueleto-linea alta"></div><div class="esqueleto-linea"></div></div></div>';
     try {
