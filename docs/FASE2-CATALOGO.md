@@ -100,6 +100,7 @@ UPDATE variantes SET sku = CONCAT('MG-VAR-', id) WHERE sku = '' OR sku IS NULL;
 - **Archivar** (`activo = 0`) desactiva también sus variantes. No se borra un producto con `pedido_items`.
 - **Generar matriz** no duplica combinaciones existentes (`uq_var`); informa cuántas creó y cuántas omitió.
 - **Imágenes:** máximo 6 por producto, `alt` obligatorio, primera = principal; se guardan en `img/productos/<producto_id>/` como `-400`, `-800` y `-1600.webp`.
+  - Las rutas se resuelven con `dirname(__DIR__, 2)` desde `api/src/`: `__DIR__` es `api/src`, así que `dirname(__DIR__)` apuntaría a `api/` y las imágenes quedarían fuera de la raíz pública (404).
 - **Concurrencia:** ajustes de stock con `SELECT … FOR UPDATE` sobre la variante.
 
 ## 5. Frontend
