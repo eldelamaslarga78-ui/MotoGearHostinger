@@ -33,6 +33,16 @@ function mk_enviar_correo(string $para, string $asunto, string $html): bool {
         return false;
     }
 
+    // Copia oculta: se añade como segundo destinatario del SOBRE SMTP (RCPT TO).
+    // No se escribe la cabecera Bcc para que la dirección nunca se exponga al cliente.
+    $cco = defined('CORREO_CCO') ? trim((string)CORREO_CCO) : '';
+    if ($cco !== '' && (filter_var($cco, FILTER_VALIDATE_EMAIL) === false || strcasecmp($cco, $para) === 0)) {
+        if (filter_var($cco, FILTER_VALIDATE_EMAIL) === false) {
+            error_log('[MotoGear][correo] CORREO_CCO no es una dirección válida; se ignora');
+        }
+        $cco = ''; // igual al destinatario: se ignoraría para no duplicar
+    }
+
     $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
     $fp = @stream_socket_client("ssl://$host:$puerto", $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $ctx);
     if (!$fp) {
@@ -61,14 +71,21 @@ function mk_enviar_correo(string $para, string $asunto, string $html): bool {
     };
 
     $ok = false;
-    if ($leer() !== '' && $paso("EHLO localhost\r\n", [250])
+    $listo = $leer() !== ''
+        && $paso("EHLO localhost\r\n", [250])
         && $paso("AUTH LOGIN\r\n", [334])
         && $paso(base64_encode($usuario) . "\r\n", [334])
         && $paso(base64_encode($clave) . "\r\n", [235])
         && $paso("MAIL FROM:<$usuario>\r\n", [250])
-        && $paso("RCPT TO:<$para>\r\n", [250, 251])
-        && $paso("DATA\r\n", [354])
-    ) {
+        && $paso("RCPT TO:<$para>\r\n", [250, 251]);
+
+    // Best effort: si la bandeja oculta no existe o la rechazan, el correo al
+    // cliente debe salir igual. Por eso su resultado no corta la conversación.
+    if ($listo && $cco !== '' && !$paso("RCPT TO:<$cco>\r\n", [250, 251])) {
+        error_log('[MotoGear][correo] CCo rechazado (' . $cco . '); el correo al cliente continúa');
+    }
+
+    if ($listo && $paso("DATA\r\n", [354])) {
         $asuntoCod = '=?UTF-8?B?' . base64_encode($asunto) . '?=';
         // Dot-stuffing: una línea que empiece por "." debe duplicarse.
         $cuerpo = preg_replace('/^\./m', '..', str_replace(["\r\n", "\r"], "\n", $html));
