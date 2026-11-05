@@ -22,7 +22,7 @@ function mk_config(string $clave, string $def = ''): string {
  * Lee y valida cada respuesta del servidor: solo devuelve true si el mensaje
  * fue aceptado (250 tras el cuerpo). Cualquier otro código se registra en el log.
  */
-function mk_enviar_correo(string $para, string $asunto, string $html): bool {
+function mk_enviar_correo(string $para, string $asunto, string $html, int $timeout = 20): bool {
     $host = mk_config('smtp_host');
     $puerto = (int)mk_config('smtp_puerto', '465');
     $usuario = mk_config('smtp_usuario');
@@ -44,12 +44,12 @@ function mk_enviar_correo(string $para, string $asunto, string $html): bool {
     }
 
     $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
-    $fp = @stream_socket_client("ssl://$host:$puerto", $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $ctx);
+    $fp = @stream_socket_client("ssl://$host:$puerto", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $ctx);
     if (!$fp) {
         error_log("[MotoGear][correo] conexión fallida: $errno $errstr");
         return false;
     }
-    stream_set_timeout($fp, 20);
+    stream_set_timeout($fp, $timeout);
 
     // Lee una respuesta completa (incluye las líneas "250-" de EHLO).
     $leer = function () use ($fp): string {
@@ -360,9 +360,11 @@ function mk_carrito_recuperar(array $b): array {
 
     $enlace = 'https://ecomerce.sebasdigital.site/carrito.html?token=' . urlencode($c['token']);
     $html = '<p>Hola,</p><p>Dejaste artículos en tu carrito de MotoGear. Recupéralos aquí:</p><p><a href="' . $enlace . '">' . $enlace . '</a></p>';
-    ob_encolar('correo', ['para' => (string)$c['email'], 'asunto' => 'Tu carrito te espera en MotoGear', 'html' => $html]);
+    $avisoId = ob_encolar('correo', ['para' => (string)$c['email'], 'asunto' => 'Tu carrito te espera en MotoGear', 'html' => $html]);
     db()->prepare('UPDATE carritos SET estado = "recuperado", recordatorios = recordatorios + 1 WHERE id = ?')->execute([$id]);
     auditar('carrito.recuperar', 'carritos', $id, ['email' => (string)$c['email']]);
+    // Acción manual del panel: se envía en el acto (si falla, el cron reintenta).
+    ob_procesar_ids([$avisoId], 6);
     return ['ok' => true];
 }
 

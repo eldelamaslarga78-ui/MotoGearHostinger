@@ -162,7 +162,7 @@ function chk_registrar_cupon_y_carrito(PDO $pdo, int $pid, array $desc, string $
  * 7. Confirmación por correo: se guarda en el outbox DENTRO de la transacción.
  * El cron la envía; el pedido nunca depende del SMTP.
  */
-function chk_encolar_confirmacion(int $pid, string $nombre, string $mail, int $total): void {
+function chk_encolar_confirmacion(int $pid, string $nombre, string $mail, int $total): int {
     $waTexto = rawurlencode("Hola MotoGear, quiero pagar mi pedido #$pid por $" . number_format($total, 0, ',', '.') . " a nombre de $nombre.");
     $waLink = 'https://api.whatsapp.com/send?phone=573167800764&text=' . $waTexto;
     $html = '<p>Hola ' . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . ',</p>'
@@ -170,7 +170,7 @@ function chk_encolar_confirmacion(int $pid, string $nombre, string $mail, int $t
         . '<p>Para completar el pago, escríbenos por WhatsApp y te indicamos los pasos:</p>'
         . '<p style="font-size:16px"><a href="' . $waLink . '">' . $waLink . '</a></p>'
         . '<p>Gracias por comprar en MotoGear.</p>';
-    ob_encolar('correo', ['para' => $mail, 'asunto' => "Tu pedido #$pid en MotoGear", 'html' => $html]);
+    return ob_encolar('correo', ['para' => $mail, 'asunto' => "Tu pedido #$pid en MotoGear", 'html' => $html]);
 }
 
 /** Punto de entrada del checkout. Devuelve la respuesta JSON. */
@@ -204,12 +204,16 @@ function chk_crear(array $b, string $ip, string $idem): array {
         $pid = chk_insertar_pedido($pdo, $d, $sub, $desc, $clienteId, $ip, $idem);
         chk_reservar_stock($pdo, $pid, $lineas, $V, $P);
         chk_registrar_cupon_y_carrito($pdo, $pid, $desc, s($b['carrito_token'] ?? '', 36));
-        chk_encolar_confirmacion($pid, $d['nombre'], $d['mail'], $desc['total']);
+        $avisoId = chk_encolar_confirmacion($pid, $d['nombre'], $d['mail'], $desc['total']);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $e;
     }
+
+    // Envío inmediato del correo de confirmación (tiempo límite corto).
+    // Si falla o expira, la fila queda pendiente y el cron la reintenta.
+    ob_procesar_ids([$avisoId], 6);
 
     return ['id' => $pid, 'total' => $desc['total'], 'descuento' => $desc['descuento']];
 }
