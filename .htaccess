@@ -52,6 +52,9 @@ RewriteRule ^ %1 [R=301,L]
 # ============================================================================
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|html)$">
-    Header set Cache-Control "no-cache"
+    Header set Cache-Control "no-cache, must-revalidate"
+    # Hostinger añade Expires (+7 días) y su CDN cachea por URL ignorando no-cache.
+    # Al unset, el CDN revalida y un despliegue se ve al instante.
+    Header always unset Expires
   </FilesMatch>
 </IfModule>
