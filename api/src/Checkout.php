@@ -211,9 +211,7 @@ function chk_crear(array $b, string $ip, string $idem): array {
         throw $e;
     }
 
-    // Envío inmediato del correo de confirmación (tiempo límite corto).
-    // Si falla o expira, la fila queda pendiente y el cron la reintenta.
-    ob_procesar_ids([$avisoId], 6);
-
-    return ['id' => $pid, 'total' => $desc['total'], 'descuento' => $desc['descuento']];
+    // El envío del correo lo dispara el router después de responder al cliente
+    // (ver api.php, case 'pedido'). El id del aviso se devuelve en _aviso.
+    return ['id' => $pid, 'total' => $desc['total'], 'descuento' => $desc['descuento'], '_aviso' => $avisoId];
 }

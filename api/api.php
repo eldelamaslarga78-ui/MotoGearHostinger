@@ -73,7 +73,33 @@ try {
 
     case 'pedido':
         req($m === 'POST', 'Método no permitido');
-        out(chk_crear(body(), $ip, substr((string)($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''), 0, 36)));
+        $res = chk_crear(body(), $ip, substr((string)($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''), 0, 36));
+        $aviso = (int)($res['_aviso'] ?? 0);
+        unset($res['_aviso']);
+
+        // 1. Responder al cliente ya: el pedido está confirmado.
+        http_response_code(200);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($res, JSON_UNESCAPED_UNICODE);
+
+        // 2. Enviar la confirmación inmediatamente después, sin hacer esperar al
+        //    cliente. LiteSpeed libera la conexión con litespeed_finish_request;
+        //    si no existe, se envía antes de cerrar (el cliente espera al SMTP).
+        if ($aviso > 0) {
+            ignore_user_abort(true);
+            if (function_exists('litespeed_finish_request')) {
+                @litespeed_finish_request();
+                @ob_procesar_ids([$aviso], 6);
+            } elseif (function_exists('fastcgi_finish_request')) {
+                @fastcgi_finish_request();
+                @ob_procesar_ids([$aviso], 6);
+            } else {
+                while (ob_get_level() > 0) { @ob_end_flush(); }
+                @flush();
+                @ob_procesar_ids([$aviso], 6);
+            }
+        }
+        exit;
 
     case 'mensaje':
         req($m === 'POST', 'Método no permitido');
