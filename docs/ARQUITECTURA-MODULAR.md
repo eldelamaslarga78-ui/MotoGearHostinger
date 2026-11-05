@@ -31,15 +31,24 @@
 
 ```
 Checkout ──(misma transacción)──> pedidos + pedido_items + outbox(pendiente)
-                                                   │
-cron (cada 10 min) ──> ob_procesar(20) ──> SMTP ──┴──> enviado | pendiente (reintento) | fallido (5 intentos)
+                                            │
+                       ┌────────────────────┴────────────────────┐
+                       │                                         │
+    1) envío inmediato (tras responder)              2) red de seguridad
+       litespeed_finish_request → SMTP                     cron cada 5 min
+       ob_procesar_ids([id], timeout 6 s)                  ob_procesar(20)
+                       │                                         │
+                       └──────────► enviado | pendiente (reintento) | fallido (5 intentos)
 ```
 
 - `ob_encolar()` se llama dentro de la transacción del negocio: el mensaje existe si y solo si existe el pedido.
-- `ob_procesar()` reintenta hasta `OB_MAX_INTENTOS` (5) veces y registra el último error.
+- **Envío inmediato:** el router responde al cliente (JSON) y llama a `litespeed_finish_request()`, que libera la conexión; después envía el correo con `ob_procesar_ids()` y un tiempo límite de 6 s. El cliente no espera al SMTP.
+- **Red de seguridad:** si el envío inmediato falla o expira, la fila queda `pendiente` y el cron la reintenta (hasta 5 intentos, guardando `ultimo_error`).
 - Consumidores actuales: confirmación de pedido con enlace a WhatsApp, recordatorio de carrito a las 24 h y recuperación manual desde el panel.
 
-**Latencia:** el correo sale en el siguiente ciclo del cron (hasta 10 minutos).
+**Latencia:** normalmente el correo sale a los ~2 s del pedido. Solo si el SMTP falla se espera al cron (hasta 5 min).
+
+**Copia oculta:** `CORREO_CCO` (en `config.local.php`) añade un segundo destinatario en el sobre SMTP (`RCPT TO`), sin cabecera `Bcc`, para que la dirección nunca se exponga al cliente. Es "mejor esfuerzo": si la copia falla, el correo al cliente sale igual.
 
 ## Pruebas
 
