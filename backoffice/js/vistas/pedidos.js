@@ -174,12 +174,21 @@ function seccionEnvio() {
   const e = detalle.envio;
   let form = '';
   if (['en_preparacion', 'confirmado'].includes(detalle.pedido.estado)) {
-    const opciones = detalle.transportadoras.map((t) => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
-    form = `<div class="herramientas">
-      <select class="campo" id="env-trans">${opciones}</select>
-      <input class="campo" id="env-guia" placeholder="Número de guía">
-      <button class="btn mini" type="button" data-accion="guia">Despachar</button>
-    </div>`;
+    if (!detalle.transportadoras.length) {
+      // Sin transportadora activa el formulario no se puede completar.
+      form = `<div class="estado-vacio">
+        <strong>No hay transportadoras activas</strong>
+        <span>Para despachar este pedido primero crea o activa una transportadora.</span>
+        <a class="btn sec mini" href="#/transportadoras">Gestionar transportadoras</a>
+      </div>`;
+    } else {
+      const opciones = detalle.transportadoras.map((t) => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
+      form = `<div class="herramientas">
+        <select class="campo" id="env-trans">${opciones}</select>
+        <input class="campo" id="env-guia" placeholder="Número de guía">
+        <button class="btn mini" type="button" data-accion="guia">Despachar</button>
+      </div>`;
+    }
   }
   const info = e ? `<div class="linea-dato"><span>Guía</span><span>${esc(e.guia || '—')}</span></div>
     <div class="linea-dato"><span>Transportadora</span><span>${esc(e.transportadora || '—')}</span></div>
@@ -239,8 +248,11 @@ async function accionDrawer(accion, extra = {}) {
       await api('pedido_transicion', { cuerpo: { id: drawerId, estado: extra.estado } });
       toast('Estado actualizado');
     } else if (accion === 'guia') {
-      const transportadora_id = Number(raiz.querySelector('#env-trans').value || 0);
-      const guia = raiz.querySelector('#env-guia').value.trim();
+      const sel = raiz.querySelector('#env-trans');
+      const inp = raiz.querySelector('#env-guia');
+      if (!sel || !sel.value) { toast('No hay transportadoras activas', 'error'); return; }
+      const transportadora_id = Number(sel.value || 0);
+      const guia = inp ? inp.value.trim() : '';
       await api('guia_guardar', { cuerpo: { id: drawerId, transportadora_id, guia } });
       toast('Envío registrado');
     } else if (accion === 'factura') {
