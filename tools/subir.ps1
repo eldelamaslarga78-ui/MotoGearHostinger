@@ -217,7 +217,10 @@ function Subir-Archivo([string]$rel) {
     $datos = [System.IO.File]::ReadAllBytes($local)
     if (Es-Texto $rel) { $datos = Normalizar-Texto $datos }
 
-    if (-not $Forzar) {
+    # Con -Solo el llamador sabe que el archivo cambió: se sube siempre.
+    # Comparar solo el tamaño no detecta ediciones de igual longitud
+    # (por ejemplo cambiar main.js?v=3 por ?v=4).
+    if (-not $Forzar -and -not $script:SubirSiempre) {
         $remoto = Obtener-TamanoRemoto $rel
         if ($remoto -eq $datos.Length) { return 'igual' }
     }
@@ -303,6 +306,9 @@ function Expandir-Solo([string[]]$rutas) {
 }
 
 # ------------------------------------------------------------------- ejecucion
+
+# -Solo sube siempre (no compara tamaño): quien indica el archivo sabe que cambió.
+$script:SubirSiempre = ($Solo.Count -gt 0)
 
 $objetivos = @()
 if ($Todo) {
