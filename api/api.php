@@ -1,5 +1,10 @@
 <?php
 declare(strict_types=1);
+// Autoloader PSR-4 (App\ → api/src/). Se registra antes de cualquier require
+// para que las clases de la nueva arquitectura estén disponibles.
+require __DIR__ . '/src/Core/Autoloader.php';
+(new \App\Core\Autoloader(__DIR__ . '/src'))->register();
+
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';

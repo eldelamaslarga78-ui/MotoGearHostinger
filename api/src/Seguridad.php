@@ -5,55 +5,26 @@ declare(strict_types=1);
  * Sin dependencias: HMAC-SHA1 + Base32 propios.
  */
 
+/*
+ * Los helpers globales totp_* delegan en App\Services\SeguridadService,
+ * que es la implementación canónica (fase 1 de la migración a MVC+Servicios).
+ * Se eliminarán junto con este archivo cuando el dominio de autenticación
+ * se migre por completo.
+ */
 function totp_base32_encode(string $bytes): string {
-    $alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    $bits = '';
-    for ($i = 0; $i < strlen($bytes); $i++) {
-        $bits .= str_pad(decbin(ord($bytes[$i])), 8, '0', STR_PAD_LEFT);
-    }
-    $salida = '';
-    foreach (str_split($bits, 5) as $g) {
-        $salida .= $alfabeto[bindec(str_pad($g, 5, '0', STR_PAD_RIGHT))];
-    }
-    return $salida;
+    return \App\Services\SeguridadService::base32Codificar($bytes);
 }
 
 function totp_base32_decode(string $base32): string {
-    $alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    $base32 = strtoupper($base32);
-    $bits = '';
-    for ($i = 0; $i < strlen($base32); $i++) {
-        $v = strpos($alfabeto, $base32[$i]);
-        if ($v === false) continue;
-        $bits .= str_pad(decbin($v), 5, '0', STR_PAD_LEFT);
-    }
-    $salida = '';
-    foreach (str_split($bits, 8) as $g) {
-        if (strlen($g) < 8) break;
-        $salida .= chr(bindec($g));
-    }
-    return $salida;
+    return \App\Services\SeguridadService::base32Decodificar($base32);
 }
 
 function totp_codigo(string $secreto, int $offset = 0): string {
-    $contador = intdiv((int)time(), 30) + $offset;
-    $msg = pack('N2', 0, $contador);
-    $hash = hash_hmac('sha1', $msg, $secreto, true);
-    $o = ord($hash[strlen($hash) - 1]) & 0x0F;
-    $binario = ((ord($hash[$o]) & 0x7F) << 24)
-        | ((ord($hash[$o + 1]) & 0xFF) << 16)
-        | ((ord($hash[$o + 2]) & 0xFF) << 8)
-        | (ord($hash[$o + 3]) & 0xFF);
-    return str_pad((string)($binario % 1000000), 6, '0', STR_PAD_LEFT);
+    return \App\Services\SeguridadService::codigo($secreto, $offset);
 }
 
 function totp_verificar(string $secreto, string $codigo): bool {
-    $codigo = preg_replace('/\D+/', '', $codigo);
-    if (strlen($codigo) !== 6) return false;
-    for ($o = -1; $o <= 1; $o++) {
-        if (hash_equals($codigo, totp_codigo($secreto, $o))) return true;
-    }
-    return false;
+    return \App\Services\SeguridadService::verificar($secreto, $codigo);
 }
 
 /** Genera el secreto y lo guarda (pendiente de activación). Devuelve el Base32. */

@@ -16,6 +16,10 @@ require $base . '/src/Seguridad.php';
 require $base . '/src/Pedidos.php';
 require $base . '/src/Checkout.php';
 
+// Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
+require $base . '/src/Core/Autoloader.php';
+(new \App\Core\Autoloader($base . '/src'))->register();
+
 $ok = 0;
 $fallos = [];
 
@@ -98,6 +102,29 @@ afirma(ped_permiso_transicion('pendiente_pago', 'cancelado') === 'pedidos.cancel
 afirma(ped_permiso_transicion('pendiente_pago', 'entregado') === null, 'estados: no se puede saltar a entregado');
 afirma(ped_permiso_transicion('entregado', 'cancelado') === null, 'estados: un pedido entregado no se cancela');
 afirma(ped_permiso_transicion('enviado', 'entregado') === 'pedidos.editar', 'estados: enviado -> entregado');
+
+/* ------------- nueva arquitectura: Core + Servicios (fase 1) ------------ */
+afirma(class_exists('\App\Services\SeguridadService'), 'core: autoloader carga App\\Services\\SeguridadService');
+
+$c = new \App\Core\Container();
+$c->set('reloj', fn() => 'ok');
+afirma($c->get('reloj') === 'ok', 'core: container resuelve una fábrica');
+$c->singleton('contador', fn() => new \stdClass());
+afirma($c->get('contador') === $c->get('contador'), 'core: container singleton devuelve la misma instancia');
+afirma($c->make(\App\Services\SeguridadService::class) instanceof \App\Services\SeguridadService, 'core: container auto-resuelve una clase sin dependencias');
+
+afirma(\App\Core\Texto::s('  hola  ', 10) === 'hola', 'core: Texto::s recorta espacios');
+afirma(\App\Core\Texto::slug('Cascos Integrales') === 'cascos-integrales', 'core: Texto::slug normaliza');
+afirma(\App\Core\Sql::ph(3) === '?,?,?', 'core: Sql::ph genera placeholders');
+afirma((new \App\Core\UserError('x')) instanceof \Exception, 'core: UserError extiende Exception');
+
+// TOTP canónico (clase) y delegación de los helpers globales.
+$secreto2 = random_bytes(20);
+afirma(\App\Services\SeguridadService::base32Decodificar(\App\Services\SeguridadService::base32Codificar($secreto2)) === $secreto2, 'servicio: base32 ida y vuelta');
+$codigo2 = \App\Services\SeguridadService::codigo($secreto2);
+afirma(\App\Services\SeguridadService::verificar($secreto2, $codigo2), 'servicio: acepta el código vigente');
+afirma(!\App\Services\SeguridadService::verificar($secreto2, $codigo2 === '000000' ? '111111' : '000000'), 'servicio: rechaza código incorrecto');
+afirma(totp_codigo($secreto2) === \App\Services\SeguridadService::codigo($secreto2), 'servicio: helper global delega en la clase');
 
 /* ------------------------------ resultado ------------------------------- */
 $total = $ok + count($fallos);
