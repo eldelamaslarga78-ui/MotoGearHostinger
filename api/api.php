@@ -8,7 +8,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
-require __DIR__ . '/src/Catalogo.php';
 require __DIR__ . '/src/Pedidos.php';
 require __DIR__ . '/src/CRM.php';
 require __DIR__ . '/src/Marketing.php';
@@ -71,6 +70,31 @@ $container->singleton(
         $c->get(\App\Services\AuthService::class),
         $c->get(\App\Services\SeguridadService::class),
         $c->get(\App\Core\Sesion::class)
+    )
+);
+$container->singleton(
+    \App\Repositories\Contracts\CatalogoRepositoryInterface::class,
+    fn($c) => new \App\Repositories\CatalogoRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\ImagenService::class,
+    fn($c) => new \App\Services\ImagenService(
+        $c->get(PDO::class),
+        $c->get(\App\Repositories\Contracts\CatalogoRepositoryInterface::class)
+    )
+);
+$container->singleton(
+    \App\Services\CatalogoService::class,
+    fn($c) => new \App\Services\CatalogoService(
+        $c->get(PDO::class),
+        $c->get(\App\Repositories\Contracts\CatalogoRepositoryInterface::class)
+    )
+);
+$container->singleton(
+    \App\Controllers\CatalogoController::class,
+    fn($c) => new \App\Controllers\CatalogoController(
+        $c->get(\App\Services\CatalogoService::class),
+        $c->get(\App\Services\ImagenService::class)
     )
 );
 
@@ -234,72 +258,72 @@ try {
     /* ---------------- BACKOFFICE · Fase 2 (catálogo) ---------------- */
     case 'categorias':
         admin();
-        out(cat_categorias());
+        out($container->get(\App\Controllers\CatalogoController::class)->categorias());
 
     case 'productos':
         admin('productos.ver');
-        out(cat_productos($_GET));
+        out($container->get(\App\Controllers\CatalogoController::class)->productos($_GET));
 
     case 'producto_detalle':
         admin('productos.ver');
-        out(cat_producto_detalle((int)($_GET['id'] ?? 0)));
+        out($container->get(\App\Controllers\CatalogoController::class)->productoDetalle((int)($_GET['id'] ?? 0)));
 
     case 'producto_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('productos.editar');
-        out(cat_producto_guardar(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->productoGuardar(body()));
 
     case 'producto_archivar':
         req($m === 'POST', 'Método no permitido');
         admin('productos.borrar');
-        out(cat_producto_archivar((int)(body()['id'] ?? 0)));
+        out($container->get(\App\Controllers\CatalogoController::class)->productoArchivar((int)(body()['id'] ?? 0)));
 
     case 'variantes_generar':
         req($m === 'POST', 'Método no permitido');
         admin('productos.editar');
-        out(cat_variantes_generar(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->variantesGenerar(body()));
 
     case 'variante_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('productos.editar');
-        out(cat_variante_guardar(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->varianteGuardar(body()));
 
     case 'stock_ajustar':
         req($m === 'POST', 'Método no permitido');
         admin('inventario.ajustar');
-        out(cat_stock_ajustar(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->stockAjustar(body()));
 
     case 'inventario':
         admin('productos.ver');
-        out(cat_inventario($_GET));
+        out($container->get(\App\Controllers\CatalogoController::class)->inventario($_GET));
 
     case 'stock_alertas':
         admin('productos.ver');
-        out(cat_stock_alertas());
+        out($container->get(\App\Controllers\CatalogoController::class)->stockAlertas());
 
     case 'imagen_subir':
         admin('productos.editar');
-        out(cat_imagen_subir());
+        out($container->get(\App\Controllers\CatalogoController::class)->imagenSubir($_POST, $_FILES));
 
     case 'imagen_orden':
         req($m === 'POST', 'Método no permitido');
         admin('productos.editar');
-        out(cat_imagen_orden(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->imagenOrden(body()));
 
     case 'imagen_borrar':
         req($m === 'POST', 'Método no permitido');
         admin('productos.editar');
-        out(cat_imagen_borrar(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->imagenBorrar(body()));
 
     case 'categoria_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('categorias.editar');
-        out(cat_categoria_guardar(body()));
+        out($container->get(\App\Controllers\CatalogoController::class)->categoriaGuardar(body()));
 
     case 'categoria_borrar':
         req($m === 'POST', 'Método no permitido');
         admin('categorias.borrar');
-        out(cat_categoria_borrar((string)(body()['id'] ?? '')));
+        out($container->get(\App\Controllers\CatalogoController::class)->categoriaBorrar((string)(body()['id'] ?? '')));
 
     /* ---------------- BACKOFFICE · Fase 3 (pedidos) ---------------- */
     case 'pedidos':
