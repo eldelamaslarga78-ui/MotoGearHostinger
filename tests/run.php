@@ -12,7 +12,6 @@ define('MG_APP', true);
 $base = is_dir(__DIR__ . '/../api/src') ? __DIR__ . '/../api' : __DIR__;
 require $base . '/src/Util.php';
 require $base . '/src/Marketing.php';
-require $base . '/src/Seguridad.php';
 require $base . '/src/Pedidos.php';
 require $base . '/src/Checkout.php';
 
@@ -40,13 +39,9 @@ afirma(slug('Cascos Integrales') === 'cascos-integrales', 'util: slug() normaliz
 afirma(req(true, 'x') === null, 'util: req() no lanza si la condición es verdadera');
 afirma(lanza(fn() => req(false, 'msg')) === 'msg', 'util: req() lanza UserError con el mensaje');
 
-/* ----------------------------- TOTP (2FA) ------------------------------- */
-$secreto = random_bytes(20);
-afirma(totp_base32_decode(totp_base32_encode($secreto)) === $secreto, 'totp: base32 ida y vuelta');
-$codigo = totp_codigo($secreto);
-afirma(totp_verificar($secreto, $codigo), 'totp: acepta el código vigente');
-afirma(!totp_verificar($secreto, $codigo === '000000' ? '111111' : '000000'), 'totp: rechaza un código incorrecto');
-afirma(!totp_verificar($secreto, '12345'), 'totp: rechaza un código de longitud incorrecta');
+/* ----------------------------- TOTP (2FA) -------------------------------
+ * (migrado a App\Services\SeguridadService; se prueba en la sección final)
+ */
 
 /* -------------------------- cupones (reglas) ---------------------------- */
 function cupon(array $extra = []): array {
@@ -104,6 +99,30 @@ afirma(ped_permiso_transicion('entregado', 'cancelado') === null, 'estados: un p
 afirma(ped_permiso_transicion('enviado', 'entregado') === 'pedidos.editar', 'estados: enviado -> entregado');
 
 /* ------------- nueva arquitectura: Core + Servicios (fase 1) ------------ */
+// Stub de auditoría: en pruebas no hay base de datos. En producción `auditar`
+// existe en db.php; aquí la definimos como no-op solo si no está cargada.
+if (!function_exists('auditar')) { function auditar() {} }
+
+final class UsuarioRepoFake implements \App\Repositories\Contracts\UsuarioRepositoryInterface {
+    /** @var array<int,array<string,mixed>> */
+    public array $usuarios;
+    public function __construct(array $usuarios = []) { $this->usuarios = $usuarios; }
+    public function porUsuario(string $usuario): ?array {
+        foreach ($this->usuarios as $u) { if (($u['usuario'] ?? '') === $usuario) return $u; }
+        return null;
+    }
+    public function porId(int $id): ?array { return $this->usuarios[$id] ?? null; }
+    public function guardarTotp(int $id, ?string $secreto, bool $activo): void {
+        if (!isset($this->usuarios[$id])) { $this->usuarios[$id] = ['usuario' => 'u' . $id]; }
+        $this->usuarios[$id]['totp_secreto'] = $secreto;
+        $this->usuarios[$id]['totp_activo'] = $activo ? 1 : 0;
+    }
+    public function tocarUltimoAcceso(int $id): void { $this->usuarios[$id]['ultimo_acceso'] = time(); }
+    public function intentosRecientes(string $ip): int { return 0; }
+    public function registrarIntento(string $ip): void {}
+    public function limpiarIntentos(string $ip): void {}
+}
+
 afirma(class_exists('\App\Services\SeguridadService'), 'core: autoloader carga App\\Services\\SeguridadService');
 
 $c = new \App\Core\Container();
@@ -111,7 +130,9 @@ $c->set('reloj', fn() => 'ok');
 afirma($c->get('reloj') === 'ok', 'core: container resuelve una fábrica');
 $c->singleton('contador', fn() => new \stdClass());
 afirma($c->get('contador') === $c->get('contador'), 'core: container singleton devuelve la misma instancia');
-afirma($c->make(\App\Services\SeguridadService::class) instanceof \App\Services\SeguridadService, 'core: container auto-resuelve una clase sin dependencias');
+afirma($c->make(\App\Core\Texto::class) instanceof \App\Core\Texto, 'core: container auto-resuelve una clase sin dependencias');
+$c->singleton(\App\Repositories\Contracts\UsuarioRepositoryInterface::class, fn() => new UsuarioRepoFake());
+afirma($c->make(\App\Services\SeguridadService::class) instanceof \App\Services\SeguridadService, 'core: container auto-resuelve una clase con dependencias');
 
 afirma(\App\Core\Texto::s('  hola  ', 10) === 'hola', 'core: Texto::s recorta espacios');
 afirma(\App\Core\Texto::slug('Cascos Integrales') === 'cascos-integrales', 'core: Texto::slug normaliza');
@@ -124,7 +145,30 @@ afirma(\App\Services\SeguridadService::base32Decodificar(\App\Services\Seguridad
 $codigo2 = \App\Services\SeguridadService::codigo($secreto2);
 afirma(\App\Services\SeguridadService::verificar($secreto2, $codigo2), 'servicio: acepta el código vigente');
 afirma(!\App\Services\SeguridadService::verificar($secreto2, $codigo2 === '000000' ? '111111' : '000000'), 'servicio: rechaza código incorrecto');
-afirma(totp_codigo($secreto2) === \App\Services\SeguridadService::codigo($secreto2), 'servicio: helper global delega en la clase');
+
+// Sesión en memoria (abstracción de $_SESSION).
+$datosSesion = [];
+$sesion = new \App\Core\Sesion($datosSesion);
+$sesion->set('uid', 5);
+afirma($sesion->get('uid') === 5, 'sesion: set/get funciona');
+$sesion->remove('uid');
+afirma($sesion->get('uid') === null, 'sesion: remove elimina');
+$sesion->set('a', 1); $sesion->clear();
+afirma($sesion->get('a') === null, 'sesion: clear vacía');
+
+// Ciclo de vida del 2FA con repositorio en memoria.
+$fake = new UsuarioRepoFake([7 => ['usuario' => 'Admin_MG', 'totp_secreto' => null, 'totp_activo' => 0]]);
+$seg = new \App\Services\SeguridadService($fake);
+$gen = $seg->generar(7);
+afirma(str_starts_with($gen['url'], 'otpauth://totp/MotoGear:Admin_MG'), 'seguridad: generar devuelve la URI otpauth');
+$secretoGuardado = $fake->usuarios[7]['totp_secreto'];
+afirma(is_string($secretoGuardado) && strlen($secretoGuardado) === 20, 'seguridad: generar guarda un secreto de 20 bytes');
+afirma($seg->estado(7)['activo'] === false, 'seguridad: estado inicial inactivo');
+$seg->activar(7, \App\Services\SeguridadService::codigo((string)$secretoGuardado));
+afirma($fake->usuarios[7]['totp_activo'] === 1, 'seguridad: activar marca el 2FA como activo');
+afirma($seg->estado(7)['activo'] === true, 'seguridad: estado activo tras activar');
+$seg->desactivar(7);
+afirma($fake->usuarios[7]['totp_secreto'] === null && $fake->usuarios[7]['totp_activo'] === 0, 'seguridad: desactivar limpia secreto y estado');
 
 /* ------------------------------ resultado ------------------------------- */
 $total = $ok + count($fallos);

@@ -1,17 +1,27 @@
 <?php
 declare(strict_types=1);
 /*
- * Seguridad (Fase 6) · TOTP (RFC 6238) sin dependencias externas.
+ * Seguridad (Fase 6) · TOTP (RFC 6238) y ciclo de vida del 2FA.
  *
- * Dominio migrado a la nueva arquitectura: la implementación canónica vive aquí.
- * Los helpers globales totp_* de api/src/Seguridad.php delegan en esta clase
- * (se eliminarán cuando se complete la migración del dominio de autenticación).
+ * Implementación canónica del dominio. Los métodos estáticos son matemática
+ * pura (sin dependencias); los de instancia necesitan el repositorio de
+ * usuarios. El helper global totp_* de api/src/Seguridad.php delega en esta
+ * clase y se eliminará al terminar la migración.
  */
 namespace App\Services;
+
+use App\Core\UserError;
+use App\Repositories\Contracts\UsuarioRepositoryInterface;
 
 final class SeguridadService
 {
     private const ALFABETO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+    public function __construct(private UsuarioRepositoryInterface $usuarios)
+    {
+    }
+
+    /* ----------------------------- TOTP puro ------------------------------ */
 
     public static function base32Codificar(string $bytes): string
     {
@@ -74,5 +84,52 @@ final class SeguridadService
             }
         }
         return false;
+    }
+
+    /* ------------------------ ciclo de vida del 2FA ------------------------ */
+
+    /** Genera un secreto nuevo (pendiente de activación) y devuelve el Base32 + URI otpauth. */
+    public function generar(int $uid): array
+    {
+        $u = $this->usuarios->porId($uid);
+        if ($u === null) {
+            throw new UserError('Usuario no encontrado');
+        }
+        $secreto = random_bytes(20);
+        $this->usuarios->guardarTotp($uid, $secreto, false);
+        $base32 = self::base32Codificar($secreto);
+        return [
+            'secreto' => $base32,
+            'url' => 'otpauth://totp/MotoGear:' . rawurlencode((string)$u['usuario']) . '?secret=' . $base32 . '&issuer=MotoGear',
+        ];
+    }
+
+    /** Activa el 2FA verificando un código del autenticador. */
+    public function activar(int $uid, string $codigo): void
+    {
+        $u = $this->usuarios->porId($uid);
+        $secreto = $u['totp_secreto'] ?? null;
+        if (!$secreto) {
+            throw new UserError('Genera primero el código 2FA');
+        }
+        if (!self::verificar((string)$secreto, $codigo)) {
+            throw new UserError('Código incorrecto');
+        }
+        $this->usuarios->guardarTotp($uid, (string)$secreto, true);
+        auditar('usuario.2fa', 'usuarios', $uid, ['estado' => 'activado']);
+    }
+
+    /** Desactiva el 2FA y borra el secreto. */
+    public function desactivar(int $uid): void
+    {
+        $this->usuarios->guardarTotp($uid, null, false);
+        auditar('usuario.2fa', 'usuarios', $uid, ['estado' => 'desactivado']);
+    }
+
+    /** Estado actual del 2FA del usuario. */
+    public function estado(int $uid): array
+    {
+        $u = $this->usuarios->porId($uid);
+        return ['activo' => (bool)($u['totp_activo'] ?? false)];
     }
 }

@@ -12,7 +12,6 @@ require __DIR__ . '/src/Catalogo.php';
 require __DIR__ . '/src/Pedidos.php';
 require __DIR__ . '/src/CRM.php';
 require __DIR__ . '/src/Marketing.php';
-require __DIR__ . '/src/Seguridad.php';
 require __DIR__ . '/src/Checkout.php';
 require __DIR__ . '/src/Outbox.php';
 require __DIR__ . '/src/Admin.php';
@@ -44,6 +43,36 @@ function sku_base(int $productoId, string $talla, string $color = ''): string {
     return $sku;
 }
 
+
+/* ---------- Contenedor de dependencias (nueva arquitectura) ---------- */
+// Las fábricas son perezosas: no se abre la conexión ni se instancian clases
+// hasta que un endpoint del dominio de autenticación las solicite.
+$container = new \App\Core\Container();
+$container->singleton(PDO::class, fn() => db());
+$container->singleton(\App\Core\Sesion::class, fn() => new \App\Core\Sesion());
+$container->singleton(
+    \App\Repositories\Contracts\UsuarioRepositoryInterface::class,
+    fn($c) => new \App\Repositories\UsuarioRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\SeguridadService::class,
+    fn($c) => new \App\Services\SeguridadService($c->get(\App\Repositories\Contracts\UsuarioRepositoryInterface::class))
+);
+$container->singleton(
+    \App\Services\AuthService::class,
+    fn($c) => new \App\Services\AuthService(
+        $c->get(\App\Repositories\Contracts\UsuarioRepositoryInterface::class),
+        $c->get(\App\Core\Sesion::class)
+    )
+);
+$container->singleton(
+    \App\Controllers\SeguridadController::class,
+    fn($c) => new \App\Controllers\SeguridadController(
+        $c->get(\App\Services\AuthService::class),
+        $c->get(\App\Services\SeguridadService::class),
+        $c->get(\App\Core\Sesion::class)
+    )
+);
 
 $r = $_GET['r'] ?? '';
 $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -125,43 +154,7 @@ try {
     /* ---------------- SESIÓN ---------------- */
     case 'login':
         req($m === 'POST', 'Método no permitido');
-        $b = body();
-        $q = db()->prepare('SELECT COUNT(*) FROM intentos WHERE ip=? AND creado > NOW() - INTERVAL 15 MINUTE');
-        $q->execute([$ip]);
-        if ((int)$q->fetchColumn() >= 8) out(['error' => 'Demasiados intentos. Espera 15 minutos.'], 429);
-
-        $q = db()->prepare('SELECT u.*, r.nombre AS rol
-                              FROM usuarios u JOIN roles r ON r.id = u.rol_id
-                             WHERE u.usuario = ? AND u.activo = 1');
-        $q->execute([s($b['usuario'] ?? '', 40)]);
-        $a = $q->fetch();
-        $hash = $a['clave_hash'] ?? '$2y$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidinv';
-        if (!$a || !password_verify((string)($b['clave'] ?? ''), $hash)) {
-            db()->prepare('INSERT INTO intentos (ip) VALUES (?)')->execute([$ip]);
-            sleep(1);
-            out(['error' => 'Usuario o contraseña incorrectos'], 401);
-        }
-        // 2FA: si está activo, exige el código del autenticador.
-        if (!empty($a['totp_activo'])) {
-            $codigo = (string)($b['codigo'] ?? '');
-            if ($codigo === '') {
-                // Paso 1 correcto: la contraseña es válida; ahora se pide el código del autenticador.
-                out(['requiere_2fa' => true]);
-            }
-            if (!totp_verificar((string)$a['totp_secreto'], $codigo)) {
-                db()->prepare('INSERT INTO intentos (ip) VALUES (?)')->execute([$ip]);
-                out(['error' => 'Código de verificación incorrecto'], 401);
-            }
-        }
-        db()->prepare('DELETE FROM intentos WHERE ip=?')->execute([$ip]);
-        session_regenerate_id(true);
-        $_SESSION['uid'] = (int)$a['id'];
-        $_SESSION['rol'] = $a['rol'];
-        $_SESSION['csrf'] = bin2hex(random_bytes(16));
-        unset($_SESSION['admin']);
-        db()->prepare('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?')->execute([(int)$a['id']]);
-        auditar('sesion.login', 'usuarios', (int)$a['id']);
-        out(['ok' => true, 'csrf' => $_SESSION['csrf']]);
+        out($container->get(\App\Controllers\SeguridadController::class)->login(body(), $ip));
 
     case 'me':
         $u = usuario_actual();
@@ -180,28 +173,25 @@ try {
             $t = $_SERVER['HTTP_X_CSRF'] ?? '';
             if (!hash_equals($_SESSION['csrf'] ?? '', $t)) out(['error' => 'Token inválido, recarga la página'], 403);
         }
-        auditar('sesion.logout', 'usuarios', (int)($_SESSION['uid'] ?? 0) ?: null);
-        $_SESSION = [];
-        session_destroy();
-        out(['ok' => true]);
+        out($container->get(\App\Controllers\SeguridadController::class)->logout());
 
     /* ---------------- SEGURIDAD (2FA) ---------------- */
     case '2fa_estado':
         admin();
-        out(seg_2fa_estado());
+        out($container->get(\App\Controllers\SeguridadController::class)->estado2fa());
 
     case '2fa_generar':
         admin();
-        out(seg_2fa_generar());
+        out($container->get(\App\Controllers\SeguridadController::class)->generar2fa());
 
     case '2fa_activar':
         req($m === 'POST', 'Método no permitido');
         admin();
-        out(seg_2fa_activar(body()));
+        out($container->get(\App\Controllers\SeguridadController::class)->activar2fa(body()));
 
     case '2fa_desactivar':
         admin();
-        out(seg_2fa_desactivar());
+        out($container->get(\App\Controllers\SeguridadController::class)->desactivar2fa());
 
     /* ---------------- BACKOFFICE · Fase 1 ---------------- */
     case 'kpis':
@@ -693,6 +683,10 @@ try {
     default:
         out(['error' => 'Ruta no encontrada'], 404);
     }
+} catch (\App\Core\HttpError $e) {
+    out(['error' => $e->getMessage()], $e->estado());
+} catch (\App\Core\UserError $e) {
+    out(['error' => $e->getMessage()], 422);
 } catch (UserError $e) {
     out(['error' => $e->getMessage()], 422);
 } catch (Throwable $e) {
