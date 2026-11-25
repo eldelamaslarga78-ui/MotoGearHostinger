@@ -4,6 +4,13 @@ declare(strict_types=1);
  * Marketing (Fase 5) · Cupones avanzados, promociones, carritos y correo.
  */
 
+/* Temporal (migración): delegado global de CRM, usado por mk_carrito hasta que
+ * este dominio se migre a MarketingService (entonces se inyectará CrmService). */
+function crm_cliente_por_datos(string $nombre, string $email, string $tel): int {
+    $svc = new \App\Services\CrmService(db(), new \App\Repositories\CrmRepository(db()));
+    return $svc->clientePorDatos($nombre, $email, $tel);
+}
+
 /* ------------------------------ correo (SMTP) ---------------------------- */
 
 function mk_config(string $clave, string $def = ''): string {

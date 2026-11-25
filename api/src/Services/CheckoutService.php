@@ -23,8 +23,11 @@ use PDO;
 
 final class CheckoutService
 {
-    public function __construct(private PDO $pdo, private CheckoutRepositoryInterface $repo)
-    {
+    public function __construct(
+        private PDO $pdo,
+        private CheckoutRepositoryInterface $repo,
+        private CrmService $crm,
+    ) {
     }
 
     private static function req(bool $ok, string $msg): void
@@ -160,7 +163,7 @@ final class CheckoutService
             $P = $cat['productos'];
             $V = $cat['variantes'];
             [$sub, $lineas, $lineasPromo] = self::validarLineas($items, $P, $V);
-            $clienteId = crm_cliente_por_datos($d['nombre'], $d['mail'], $d['tel']);
+            $clienteId = $this->crm->clientePorDatos($d['nombre'], $d['mail'], $d['tel']);
             $desc = $this->calcularDescuentos($sub, $lineasPromo, $clienteId, self::s($b['cupon'] ?? '', 30));
 
             $codigoCupon = $desc['cupon'] ? $desc['cupon']['codigo'] : null;

@@ -8,7 +8,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
-require __DIR__ . '/src/CRM.php';
 require __DIR__ . '/src/Marketing.php';
 require __DIR__ . '/src/Outbox.php';
 require __DIR__ . '/src/Admin.php';
@@ -115,15 +114,31 @@ $container->singleton(
     fn($c) => new \App\Repositories\CheckoutRepository($c->get(PDO::class))
 );
 $container->singleton(
+    \App\Repositories\Contracts\CrmRepositoryInterface::class,
+    fn($c) => new \App\Repositories\CrmRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\CrmService::class,
+    fn($c) => new \App\Services\CrmService(
+        $c->get(PDO::class),
+        $c->get(\App\Repositories\Contracts\CrmRepositoryInterface::class)
+    )
+);
+$container->singleton(
     \App\Services\CheckoutService::class,
     fn($c) => new \App\Services\CheckoutService(
         $c->get(PDO::class),
-        $c->get(\App\Repositories\Contracts\CheckoutRepositoryInterface::class)
+        $c->get(\App\Repositories\Contracts\CheckoutRepositoryInterface::class),
+        $c->get(\App\Services\CrmService::class)
     )
 );
 $container->singleton(
     \App\Controllers\CheckoutController::class,
     fn($c) => new \App\Controllers\CheckoutController($c->get(\App\Services\CheckoutService::class))
+);
+$container->singleton(
+    \App\Controllers\CrmController::class,
+    fn($c) => new \App\Controllers\CrmController($c->get(\App\Services\CrmService::class))
 );
 
 $r = $_GET['r'] ?? '';
@@ -398,40 +413,40 @@ try {
     /* ---------------- BACKOFFICE · Fase 4 (CRM y RMA) ---------------- */
     case 'clientes':
         admin('clientes.ver');
-        out(crm_clientes($_GET));
+        out($container->get(\App\Controllers\CrmController::class)->clientes($_GET));
 
     case 'cliente_detalle':
         admin('clientes.ver');
-        out(crm_cliente_detalle((int)($_GET['id'] ?? 0)));
+        out($container->get(\App\Controllers\CrmController::class)->clienteDetalle((int)($_GET['id'] ?? 0)));
 
     case 'cliente_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('clientes.editar');
-        out(crm_cliente_guardar(body()));
+        out($container->get(\App\Controllers\CrmController::class)->clienteGuardar(body()));
 
     case 'cliente_direccion':
         req($m === 'POST', 'Método no permitido');
         admin('clientes.editar');
-        out(crm_cliente_direccion(body()));
+        out($container->get(\App\Controllers\CrmController::class)->clienteDireccion(body()));
 
     case 'cliente_fusionar':
         req($m === 'POST', 'Método no permitido');
         admin('clientes.editar');
-        out(crm_cliente_fusionar(body()));
+        out($container->get(\App\Controllers\CrmController::class)->clienteFusionar(body()));
 
     case 'devoluciones':
         admin('devoluciones.ver');
-        out(crm_devoluciones($_GET));
+        out($container->get(\App\Controllers\CrmController::class)->devoluciones($_GET));
 
     case 'devolucion_crear':
         req($m === 'POST', 'Método no permitido');
         admin('devoluciones.editar');
-        out(crm_devolucion_crear(body()));
+        out($container->get(\App\Controllers\CrmController::class)->devolucionCrear(body()));
 
     case 'devolucion_transicion':
         req($m === 'POST', 'Método no permitido');
         admin('devoluciones.editar');
-        out(crm_devolucion_transicion(body()));
+        out($container->get(\App\Controllers\CrmController::class)->devolucionTransicion(body()));
 
     /* ---------------- BACKOFFICE · Fase 5 (marketing) ---------------- */
     case 'promociones':
