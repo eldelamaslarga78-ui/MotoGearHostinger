@@ -27,6 +27,8 @@ final class CheckoutService
         private PDO $pdo,
         private CheckoutRepositoryInterface $repo,
         private CrmService $crm,
+        private MarketingService $marketing,
+        private OutboxService $outbox,
     ) {
     }
 
@@ -91,14 +93,15 @@ final class CheckoutService
     private function calcularDescuentos(int $sub, array $lineasPromo, int $clienteId, string $codigoCupon): array
     {
         $pedidosEntregados = $this->repo->contarPedidosEntregados($clienteId);
-        $promos = mk_evaluar_promociones($lineasPromo, $sub);
+        $promos = $this->marketing->evaluarPromociones($lineasPromo, $sub);
         $descuentoPromo = (int)$promos['descuento'];
 
         $cup = null;
         $descuentoCupon = 0;
         if ($codigoCupon !== '' && !$promos['exclusiva']) {
             $row = $this->repo->cuponBloqueado(strtoupper($codigoCupon));
-            [$cup, $err, $descuentoCupon] = mk_cupon($row, $sub, $clienteId, $pedidosEntregados);
+            $usos = $clienteId ? $this->marketing->usosPorCliente(strtoupper($codigoCupon), $clienteId) : 0;
+            [$cup, $err, $descuentoCupon] = MarketingService::cupon($row, $sub, $clienteId, $pedidosEntregados, $usos);
             self::req($cup !== null, (string)$err);
         }
         $descuento = $descuentoPromo + $descuentoCupon;
@@ -132,7 +135,7 @@ final class CheckoutService
             . '<p>Para completar el pago, escríbenos por WhatsApp y te indicamos los pasos:</p>'
             . '<p style="font-size:16px"><a href="' . $waLink . '">' . $waLink . '</a></p>'
             . '<p>Gracias por comprar en MotoGear.</p>';
-        return ob_encolar('correo', ['para' => $mail, 'asunto' => "Tu pedido #$pid en MotoGear", 'html' => $html]);
+        return $this->outbox->encolar('correo', ['para' => $mail, 'asunto' => "Tu pedido #$pid en MotoGear", 'html' => $html]);
     }
 
     /** Punto de entrada del checkout. Devuelve la respuesta JSON. */

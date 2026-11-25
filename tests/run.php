@@ -11,7 +11,6 @@ define('MG_APP', true);
 
 $base = is_dir(__DIR__ . '/../api/src') ? __DIR__ . '/../api' : __DIR__;
 require $base . '/src/Util.php';
-require $base . '/src/Marketing.php';
 
 // Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
 require $base . '/src/Core/Autoloader.php';
@@ -52,22 +51,22 @@ function cupon(array $extra = []): array {
     ], $extra);
 }
 
-[$c, $e, $d] = mk_cupon(cupon(), 100000, 0, 0);
+[$c, $e, $d] = \App\Services\MarketingService::cupon(cupon(), 100000, 0, 0);
 afirma($e === null && $d === 10000, 'cupon: porcentaje 10% sobre 100.000');
-[$c, $e, $d] = mk_cupon(cupon(['pct' => 0, 'tipo' => 'pct', 'valor' => 10]), 99999, 0, 0);
+[$c, $e, $d] = \App\Services\MarketingService::cupon(cupon(['pct' => 0, 'tipo' => 'pct', 'valor' => 10]), 99999, 0, 0);
 afirma($d === 9999, 'cupon: porcentaje redondea hacia abajo');
-[$c, $e, $d] = mk_cupon(cupon(['tipo' => 'fijo', 'valor' => 15000, 'pct' => 0]), 100000, 0, 0);
+[$c, $e, $d] = \App\Services\MarketingService::cupon(cupon(['tipo' => 'fijo', 'valor' => 15000, 'pct' => 0]), 100000, 0, 0);
 afirma($e === null && $d === 15000, 'cupon: monto fijo');
-[$c, $e, $d] = mk_cupon(cupon(['tipo' => 'fijo', 'valor' => 15000, 'pct' => 0]), 10000, 0, 0);
+[$c, $e, $d] = \App\Services\MarketingService::cupon(cupon(['tipo' => 'fijo', 'valor' => 15000, 'pct' => 0]), 10000, 0, 0);
 afirma($d === 10000, 'cupon: monto fijo nunca supera el subtotal');
-[$c, $e, $d] = mk_cupon(cupon(['tipo' => 'envio_gratis', 'valor' => 0, 'pct' => 0]), 100000, 0, 0);
+[$c, $e, $d] = \App\Services\MarketingService::cupon(cupon(['tipo' => 'envio_gratis', 'valor' => 0, 'pct' => 0]), 100000, 0, 0);
 afirma($e === null && $d === 0, 'cupon: envío gratis no descuenta el subtotal');
-afirma(mk_cupon(cupon(['activo' => 0]), 100000, 0, 0)[1] === 'Cupón no válido', 'cupon: inactivo rechazado');
-afirma(mk_cupon(cupon(['vence' => '2000-01-01']), 100000, 0, 0)[1] === 'Cupón vencido', 'cupon: vencido rechazado');
-afirma(str_starts_with((string)mk_cupon(cupon(['minimo' => 200000]), 100000, 0, 0)[1], 'Compra mínima'), 'cupon: compra mínima');
-afirma(mk_cupon(cupon(['usos_max' => 5, 'usos' => 5]), 100000, 0, 0)[1] === 'Cupón agotado', 'cupon: agotado rechazado');
-afirma(mk_cupon(cupon(['primera_compra' => 1]), 100000, 0, 2)[1] === 'Este cupón es solo para tu primera compra', 'cupon: primera compra con historial');
-afirma(mk_cupon(null, 100000, 0, 0)[1] === 'Cupón no válido', 'cupon: inexistente rechazado');
+afirma(\App\Services\MarketingService::cupon(cupon(['activo' => 0]), 100000, 0, 0)[1] === 'Cupón no válido', 'cupon: inactivo rechazado');
+afirma(\App\Services\MarketingService::cupon(cupon(['vence' => '2000-01-01']), 100000, 0, 0)[1] === 'Cupón vencido', 'cupon: vencido rechazado');
+afirma(str_starts_with((string)\App\Services\MarketingService::cupon(cupon(['minimo' => 200000]), 100000, 0, 0)[1], 'Compra mínima'), 'cupon: compra mínima');
+afirma(\App\Services\MarketingService::cupon(cupon(['usos_max' => 5, 'usos' => 5]), 100000, 0, 0)[1] === 'Cupón agotado', 'cupon: agotado rechazado');
+afirma(\App\Services\MarketingService::cupon(cupon(['primera_compra' => 1]), 100000, 0, 2)[1] === 'Este cupón es solo para tu primera compra', 'cupon: primera compra con historial');
+afirma(\App\Services\MarketingService::cupon(null, 100000, 0, 0)[1] === 'Cupón no válido', 'cupon: inexistente rechazado');
 
 /* ---------------------- checkout: líneas y stock ------------------------ */
 $P = [11 => ['nombre' => 'AGV', 'precio' => 2499000, 'categoria_id' => 'cascos']];

@@ -8,8 +8,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
-require __DIR__ . '/src/Marketing.php';
-require __DIR__ . '/src/Outbox.php';
 require __DIR__ . '/src/Admin.php';
 
 require __DIR__ . '/src/Util.php';
@@ -129,7 +127,9 @@ $container->singleton(
     fn($c) => new \App\Services\CheckoutService(
         $c->get(PDO::class),
         $c->get(\App\Repositories\Contracts\CheckoutRepositoryInterface::class),
-        $c->get(\App\Services\CrmService::class)
+        $c->get(\App\Services\CrmService::class),
+        $c->get(\App\Services\MarketingService::class),
+        $c->get(\App\Services\OutboxService::class)
     )
 );
 $container->singleton(
@@ -139,6 +139,43 @@ $container->singleton(
 $container->singleton(
     \App\Controllers\CrmController::class,
     fn($c) => new \App\Controllers\CrmController($c->get(\App\Services\CrmService::class))
+);
+$container->singleton(
+    \App\Core\Config::class,
+    fn($c) => new \App\Core\Config($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\MailService::class,
+    fn($c) => new \App\Services\MailService($c->get(\App\Core\Config::class))
+);
+$container->singleton(
+    \App\Repositories\Contracts\OutboxRepositoryInterface::class,
+    fn($c) => new \App\Repositories\OutboxRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\OutboxService::class,
+    fn($c) => new \App\Services\OutboxService(
+        $c->get(\App\Repositories\Contracts\OutboxRepositoryInterface::class),
+        $c->get(\App\Services\MailService::class)
+    )
+);
+$container->singleton(
+    \App\Repositories\Contracts\MarketingRepositoryInterface::class,
+    fn($c) => new \App\Repositories\MarketingRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\MarketingService::class,
+    fn($c) => new \App\Services\MarketingService(
+        $c->get(PDO::class),
+        $c->get(\App\Repositories\Contracts\MarketingRepositoryInterface::class),
+        $c->get(\App\Services\OutboxService::class),
+        $c->get(\App\Services\CrmService::class),
+        $c->get(\App\Core\Config::class)
+    )
+);
+$container->singleton(
+    \App\Controllers\MarketingController::class,
+    fn($c) => new \App\Controllers\MarketingController($c->get(\App\Services\MarketingService::class))
 );
 
 $r = $_GET['r'] ?? '';
@@ -164,13 +201,13 @@ try {
     case 'cupon':
     case 'cupon_validar':
         req($m === 'POST', 'Método no permitido');
-        $r = mk_cupon_validar(body());
+        $r = $container->get(\App\Controllers\MarketingController::class)->cuponValidar(body());
         req($r['valido'], (string)($r['error'] ?? 'Cupón no válido'));
         out($r);
 
     case 'carrito':
         req($m === 'POST', 'Método no permitido');
-        out(mk_carrito(body()));
+        out($container->get(\App\Controllers\MarketingController::class)->carrito(body()));
 
     case 'pedido':
         req($m === 'POST', 'Método no permitido');
@@ -190,14 +227,14 @@ try {
             ignore_user_abort(true);
             if (function_exists('litespeed_finish_request')) {
                 @litespeed_finish_request();
-                @ob_procesar_ids([$aviso], 6);
+                @$container->get(\App\Services\OutboxService::class)->procesarIds([$aviso], 6);
             } elseif (function_exists('fastcgi_finish_request')) {
                 @fastcgi_finish_request();
-                @ob_procesar_ids([$aviso], 6);
+                @$container->get(\App\Services\OutboxService::class)->procesarIds([$aviso], 6);
             } else {
                 while (ob_get_level() > 0) { @ob_end_flush(); }
                 @flush();
-                @ob_procesar_ids([$aviso], 6);
+                @$container->get(\App\Services\OutboxService::class)->procesarIds([$aviso], 6);
             }
         }
         exit;
@@ -451,25 +488,25 @@ try {
     /* ---------------- BACKOFFICE · Fase 5 (marketing) ---------------- */
     case 'promociones':
         admin('promociones.ver');
-        out(mk_promociones($m === 'POST' ? body() : null));
+        out($container->get(\App\Controllers\MarketingController::class)->promociones($m === 'POST' ? body() : null));
 
     case 'promocion_borrar':
         req($m === 'POST', 'Método no permitido');
         admin('promociones.borrar');
-        out(mk_promocion_borrar((int)(body()['id'] ?? 0)));
+        out($container->get(\App\Controllers\MarketingController::class)->promocionBorrar((int)(body()['id'] ?? 0)));
 
     case 'carritos':
         admin('carritos.ver');
-        out(mk_carritos($_GET));
+        out($container->get(\App\Controllers\MarketingController::class)->carritos($_GET));
 
     case 'carrito_recuperar':
         req($m === 'POST', 'Método no permitido');
         admin('carritos.ver');
-        out(mk_carrito_recuperar(body()));
+        out($container->get(\App\Controllers\MarketingController::class)->carritoRecuperar(body()));
 
     case 'marketing_resumen':
         admin('dashboard.ver');
-        out(mk_marketing_resumen());
+        out($container->get(\App\Controllers\MarketingController::class)->marketingResumen());
 
     /* ---------------- BACKOFFICE · Administración (migración del panel anterior) ---------------- */
     case 'mensajes':

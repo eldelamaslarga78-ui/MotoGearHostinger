@@ -38,8 +38,6 @@ require __DIR__ . '/../api/src/Conexion.php';
 require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Metricas.php';
 require __DIR__ . '/../api/src/Util.php';
-require __DIR__ . '/../api/src/Outbox.php';
-require __DIR__ . '/../api/src/Marketing.php';
 
 // Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
 require __DIR__ . '/../api/src/Core/Autoloader.php';
@@ -48,14 +46,21 @@ require __DIR__ . '/../api/src/Core/Autoloader.php';
 $inicio = microtime(true);
 
 try {
+    $pdo = db();
+    $config = new \App\Core\Config($pdo);
+    $mail = new \App\Services\MailService($config);
+    $outbox = new \App\Services\OutboxService(new \App\Repositories\OutboxRepository($pdo), $mail);
+    $crm = new \App\Services\CrmService($pdo, new \App\Repositories\CrmRepository($pdo));
+    $marketing = new \App\Services\MarketingService($pdo, new \App\Repositories\MarketingRepository($pdo), $outbox, $crm, $config);
+
     $snapshots = mg_snapshots_reparar(7);
     $cache     = cache_limpiar();
-    $visitas   = db()->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
-    $notifs    = db()->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
-    $expirados = (new \App\Services\PedidoService(db(), new \App\Repositories\PedidoRepository(db())))->expirarPendientes();
-    $abandonos = mk_marcar_abandonos();
-    $recordatorios = mk_enviar_recordatorios();
-    [$correosOk, $correosFallidos, $correosReintento] = ob_procesar(20);
+    $visitas   = $pdo->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
+    $notifs    = $pdo->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
+    $expirados = (new \App\Services\PedidoService($pdo, new \App\Repositories\PedidoRepository($pdo)))->expirarPendientes();
+    $abandonos = $marketing->marcarAbandonos();
+    $recordatorios = $marketing->enviarRecordatorios();
+    [$correosOk, $correosFallidos, $correosReintento] = $outbox->procesar(20);
 
     printf(
         "[cron] ok snapshots=%d cache=%d visitas=%d notificaciones=%d expirados=%d abandonos=%d recordatorios=%d correos_enviados=%d correos_fallidos=%d correos_reintento=%d %.0fms\n",
