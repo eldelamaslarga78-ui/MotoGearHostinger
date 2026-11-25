@@ -1,16 +1,10 @@
 <?php
 declare(strict_types=1);
 /*
- * Errores de dominio y HTTP.
+ * Error HTTP con estado propio (401/403/404/422...).
  */
 namespace App\Core;
 
-/** Error esperado del usuario (el mensaje se muestra tal cual). */
-class UserError extends \Exception
-{
-}
-
-/** Error HTTP con estado propio (401/403/404/422...). */
 class HttpError extends \Exception
 {
     private int $estado;
