@@ -10,7 +10,6 @@ require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
 require __DIR__ . '/src/CRM.php';
 require __DIR__ . '/src/Marketing.php';
-require __DIR__ . '/src/Checkout.php';
 require __DIR__ . '/src/Outbox.php';
 require __DIR__ . '/src/Admin.php';
 
@@ -111,6 +110,21 @@ $container->singleton(
     \App\Controllers\PedidoController::class,
     fn($c) => new \App\Controllers\PedidoController($c->get(\App\Services\PedidoService::class))
 );
+$container->singleton(
+    \App\Repositories\Contracts\CheckoutRepositoryInterface::class,
+    fn($c) => new \App\Repositories\CheckoutRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\CheckoutService::class,
+    fn($c) => new \App\Services\CheckoutService(
+        $c->get(PDO::class),
+        $c->get(\App\Repositories\Contracts\CheckoutRepositoryInterface::class)
+    )
+);
+$container->singleton(
+    \App\Controllers\CheckoutController::class,
+    fn($c) => new \App\Controllers\CheckoutController($c->get(\App\Services\CheckoutService::class))
+);
 
 $r = $_GET['r'] ?? '';
 $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -145,7 +159,7 @@ try {
 
     case 'pedido':
         req($m === 'POST', 'Método no permitido');
-        $res = chk_crear(body(), $ip, substr((string)($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''), 0, 36));
+        $res = $container->get(\App\Controllers\CheckoutController::class)->crear(body(), $ip, substr((string)($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''), 0, 36));
         $aviso = (int)($res['_aviso'] ?? 0);
         unset($res['_aviso']);
 

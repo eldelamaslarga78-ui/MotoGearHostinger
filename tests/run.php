@@ -12,7 +12,6 @@ define('MG_APP', true);
 $base = is_dir(__DIR__ . '/../api/src') ? __DIR__ . '/../api' : __DIR__;
 require $base . '/src/Util.php';
 require $base . '/src/Marketing.php';
-require $base . '/src/Checkout.php';
 
 // Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
 require $base . '/src/Core/Autoloader.php';
@@ -28,7 +27,9 @@ function afirma(bool $cond, string $nombre): void {
 
 /** Devuelve el mensaje de UserError si la función lo lanza; null si no lanza. */
 function lanza(callable $f): ?string {
-    try { $f(); return null; } catch (UserError $e) { return $e->getMessage(); }
+    try { $f(); return null; }
+    catch (\App\Core\UserError $e) { return $e->getMessage(); }
+    catch (UserError $e) { return $e->getMessage(); }
 }
 
 /* ------------------------------ utilidades ------------------------------ */
@@ -72,23 +73,23 @@ afirma(mk_cupon(null, 100000, 0, 0)[1] === 'Cupón no válido', 'cupon: inexiste
 $P = [11 => ['nombre' => 'AGV', 'precio' => 2499000, 'categoria_id' => 'cascos']];
 $V = [11 => ['M' => [['id' => 5, 'color' => '', 'sku' => 'MG-11-M', 'stock' => 3]]]];
 
-[$sub, $lineas, $lp] = chk_validar_lineas([['id' => 11, 'qty' => 2, 'talla' => 'M']], $P, $V);
+[$sub, $lineas, $lp] = \App\Services\CheckoutService::validarLineas([['id' => 11, 'qty' => 2, 'talla' => 'M']], $P, $V);
 afirma($sub === 4998000, 'checkout: subtotal = precio x cantidad');
 afirma(count($lineas) === 1 && count($lp) === 1, 'checkout: una línea por ítem');
-afirma(lanza(fn() => chk_validar_lineas([['id' => 99, 'qty' => 1, 'talla' => 'M']], $P, $V)) === 'Un producto de tu carrito ya no está disponible', 'checkout: producto inexistente');
-afirma(lanza(fn() => chk_validar_lineas([['id' => 11, 'qty' => 0, 'talla' => 'M']], $P, $V)) === 'Cantidad no válida', 'checkout: cantidad 0 rechazada');
-afirma(str_starts_with((string)lanza(fn() => chk_validar_lineas([['id' => 11, 'qty' => 1, 'talla' => 'XXL']], $P, $V)), 'Elige una talla válida'), 'checkout: talla inexistente');
-afirma(str_starts_with((string)lanza(fn() => chk_validar_lineas([['id' => 11, 'qty' => 4, 'talla' => 'M']], $P, $V)), 'Stock insuficiente'), 'checkout: stock insuficiente');
-afirma(lanza(fn() => chk_validar_lineas([['id' => 11, 'qty' => 2, 'talla' => 'M'], ['id' => 11, 'qty' => 2, 'talla' => 'M']], $P, $V)) !== null, 'checkout: sumar líneas no supera el stock');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarLineas([['id' => 99, 'qty' => 1, 'talla' => 'M']], $P, $V)) === 'Un producto de tu carrito ya no está disponible', 'checkout: producto inexistente');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarLineas([['id' => 11, 'qty' => 0, 'talla' => 'M']], $P, $V)) === 'Cantidad no válida', 'checkout: cantidad 0 rechazada');
+afirma(str_starts_with((string)lanza(fn() => \App\Services\CheckoutService::validarLineas([['id' => 11, 'qty' => 1, 'talla' => 'XXL']], $P, $V)), 'Elige una talla válida'), 'checkout: talla inexistente');
+afirma(str_starts_with((string)lanza(fn() => \App\Services\CheckoutService::validarLineas([['id' => 11, 'qty' => 4, 'talla' => 'M']], $P, $V)), 'Stock insuficiente'), 'checkout: stock insuficiente');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarLineas([['id' => 11, 'qty' => 2, 'talla' => 'M'], ['id' => 11, 'qty' => 2, 'talla' => 'M']], $P, $V)) !== null, 'checkout: sumar líneas no supera el stock');
 
 /* -------------------------- checkout: datos ----------------------------- */
 $valido = ['nombre' => 'Juan Perez', 'telefono' => '3001234567', 'ciudad' => 'Bogota', 'direccion' => 'Calle 1 #2-3', 'email' => 'a@b.co'];
-afirma(chk_validar_datos($valido)['mail'] === 'a@b.co', 'checkout: datos válidos');
-afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['web' => 'bot']))) === 'Solicitud rechazada', 'checkout: campo trampa rellenado');
-afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['nombre' => 'Jo']))) === 'Escribe tu nombre completo', 'checkout: nombre corto');
-afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['telefono' => '12']))) === 'Teléfono no válido', 'checkout: teléfono inválido');
-afirma(lanza(fn() => chk_validar_datos(array_diff_key($valido, ['email' => 1]))) !== null, 'checkout: correo obligatorio');
-afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['email' => 'no-es-correo']))) !== null, 'checkout: correo con formato inválido');
+afirma(\App\Services\CheckoutService::validarDatos($valido)['mail'] === 'a@b.co', 'checkout: datos válidos');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarDatos(array_merge($valido, ['web' => 'bot']))) === 'Solicitud rechazada', 'checkout: campo trampa rellenado');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarDatos(array_merge($valido, ['nombre' => 'Jo']))) === 'Escribe tu nombre completo', 'checkout: nombre corto');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarDatos(array_merge($valido, ['telefono' => '12']))) === 'Teléfono no válido', 'checkout: teléfono inválido');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarDatos(array_diff_key($valido, ['email' => 1]))) !== null, 'checkout: correo obligatorio');
+afirma(lanza(fn() => \App\Services\CheckoutService::validarDatos(array_merge($valido, ['email' => 'no-es-correo']))) !== null, 'checkout: correo con formato inválido');
 
 /* ----------------------- máquina de estados ----------------------------- */
 afirma(\App\Services\PedidoService::permisoTransicion('pendiente_pago', 'confirmado') === 'pedidos.editar', 'estados: confirmar requiere pedidos.editar');
