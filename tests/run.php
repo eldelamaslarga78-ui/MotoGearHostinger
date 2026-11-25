@@ -12,7 +12,6 @@ define('MG_APP', true);
 $base = is_dir(__DIR__ . '/../api/src') ? __DIR__ . '/../api' : __DIR__;
 require $base . '/src/Util.php';
 require $base . '/src/Marketing.php';
-require $base . '/src/Pedidos.php';
 require $base . '/src/Checkout.php';
 
 // Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
@@ -92,11 +91,11 @@ afirma(lanza(fn() => chk_validar_datos(array_diff_key($valido, ['email' => 1])))
 afirma(lanza(fn() => chk_validar_datos(array_merge($valido, ['email' => 'no-es-correo']))) !== null, 'checkout: correo con formato inválido');
 
 /* ----------------------- máquina de estados ----------------------------- */
-afirma(ped_permiso_transicion('pendiente_pago', 'confirmado') === 'pedidos.editar', 'estados: confirmar requiere pedidos.editar');
-afirma(ped_permiso_transicion('pendiente_pago', 'cancelado') === 'pedidos.cancelar', 'estados: cancelar requiere pedidos.cancelar');
-afirma(ped_permiso_transicion('pendiente_pago', 'entregado') === null, 'estados: no se puede saltar a entregado');
-afirma(ped_permiso_transicion('entregado', 'cancelado') === null, 'estados: un pedido entregado no se cancela');
-afirma(ped_permiso_transicion('enviado', 'entregado') === 'pedidos.editar', 'estados: enviado -> entregado');
+afirma(\App\Services\PedidoService::permisoTransicion('pendiente_pago', 'confirmado') === 'pedidos.editar', 'estados: confirmar requiere pedidos.editar');
+afirma(\App\Services\PedidoService::permisoTransicion('pendiente_pago', 'cancelado') === 'pedidos.cancelar', 'estados: cancelar requiere pedidos.cancelar');
+afirma(\App\Services\PedidoService::permisoTransicion('pendiente_pago', 'entregado') === null, 'estados: no se puede saltar a entregado');
+afirma(\App\Services\PedidoService::permisoTransicion('entregado', 'cancelado') === null, 'estados: un pedido entregado no se cancela');
+afirma(\App\Services\PedidoService::permisoTransicion('enviado', 'entregado') === 'pedidos.editar', 'estados: enviado -> entregado');
 
 /* ------------- nueva arquitectura: Core + Servicios (fase 1) ------------ */
 // Stub de auditoría: en pruebas no hay base de datos. En producción `auditar`

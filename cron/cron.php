@@ -37,11 +37,14 @@ date_default_timezone_set('America/Bogota');
 require __DIR__ . '/../api/src/Conexion.php';
 require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Metricas.php';
-require __DIR__ . '/../api/src/Pedidos.php';
 require __DIR__ . '/../api/src/CRM.php';
 require __DIR__ . '/../api/src/Util.php';
 require __DIR__ . '/../api/src/Outbox.php';
 require __DIR__ . '/../api/src/Marketing.php';
+
+// Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
+require __DIR__ . '/../api/src/Core/Autoloader.php';
+(new \App\Core\Autoloader(__DIR__ . '/../api/src'))->register();
 
 $inicio = microtime(true);
 
@@ -50,7 +53,7 @@ try {
     $cache     = cache_limpiar();
     $visitas   = db()->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
     $notifs    = db()->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
-    $expirados = ped_expirar_pendientes();
+    $expirados = (new \App\Services\PedidoService(db(), new \App\Repositories\PedidoRepository(db())))->expirarPendientes();
     $abandonos = mk_marcar_abandonos();
     $recordatorios = mk_enviar_recordatorios();
     [$correosOk, $correosFallidos, $correosReintento] = ob_procesar(20);

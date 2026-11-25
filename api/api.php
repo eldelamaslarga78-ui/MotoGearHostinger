@@ -8,7 +8,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
-require __DIR__ . '/src/Pedidos.php';
 require __DIR__ . '/src/CRM.php';
 require __DIR__ . '/src/Marketing.php';
 require __DIR__ . '/src/Checkout.php';
@@ -96,6 +95,21 @@ $container->singleton(
         $c->get(\App\Services\CatalogoService::class),
         $c->get(\App\Services\ImagenService::class)
     )
+);
+$container->singleton(
+    \App\Repositories\Contracts\PedidoRepositoryInterface::class,
+    fn($c) => new \App\Repositories\PedidoRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\PedidoService::class,
+    fn($c) => new \App\Services\PedidoService(
+        $c->get(PDO::class),
+        $c->get(\App\Repositories\Contracts\PedidoRepositoryInterface::class)
+    )
+);
+$container->singleton(
+    \App\Controllers\PedidoController::class,
+    fn($c) => new \App\Controllers\PedidoController($c->get(\App\Services\PedidoService::class))
 );
 
 $r = $_GET['r'] ?? '';
@@ -328,44 +342,44 @@ try {
     /* ---------------- BACKOFFICE · Fase 3 (pedidos) ---------------- */
     case 'pedidos':
         admin('pedidos.ver');
-        out(ped_lista($_GET));
+        out($container->get(\App\Controllers\PedidoController::class)->pedidos($_GET));
 
     case 'pedido_detalle':
         admin('pedidos.ver');
-        out(ped_detalle((int)($_GET['id'] ?? 0)));
+        out($container->get(\App\Controllers\PedidoController::class)->pedidoDetalle((int)($_GET['id'] ?? 0)));
 
     case 'pedido_transicion':
         req($m === 'POST', 'Método no permitido');
         admin();
-        out(ped_transicion(body()));
+        out($container->get(\App\Controllers\PedidoController::class)->pedidoTransicion(body()));
 
     case 'pedido_pago':
         req($m === 'POST', 'Método no permitido');
         admin('pedidos.editar');
-        out(ped_pago(body()));
+        out($container->get(\App\Controllers\PedidoController::class)->pedidoPago(body()));
 
     case 'pedido_nota':
         req($m === 'POST', 'Método no permitido');
         admin('pedidos.editar');
-        out(ped_nota(body()));
+        out($container->get(\App\Controllers\PedidoController::class)->pedidoNota(body()));
 
     case 'guia_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('envios.gestionar');
-        out(ped_guia(body()));
+        out($container->get(\App\Controllers\PedidoController::class)->guiaGuardar(body()));
 
     case 'factura_emitir':
         req($m === 'POST', 'Método no permitido');
         admin('facturas.emitir');
-        out(ped_factura_emitir((int)(body()['id'] ?? 0)));
+        out($container->get(\App\Controllers\PedidoController::class)->facturaEmitir((int)(body()['id'] ?? 0)));
 
     case 'factura_ver':
         admin('facturas.ver');
-        out(ped_factura_ver((int)($_GET['id'] ?? 0)));
+        out($container->get(\App\Controllers\PedidoController::class)->facturaVer((int)($_GET['id'] ?? 0)));
 
     case 'transportadoras':
         admin('envios.gestionar');
-        out(ped_transportadoras($m === 'POST' ? body() : null));
+        out($container->get(\App\Controllers\PedidoController::class)->transportadoras($m === 'POST' ? body() : null));
 
     /* ---------------- BACKOFFICE · Fase 4 (CRM y RMA) ---------------- */
     case 'clientes':
