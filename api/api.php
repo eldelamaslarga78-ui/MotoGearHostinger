@@ -7,7 +7,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
-require __DIR__ . '/src/Metricas.php';
 
 require __DIR__ . '/src/Util.php';
 
@@ -188,6 +187,18 @@ $container->singleton(
     \App\Controllers\AdminController::class,
     fn($c) => new \App\Controllers\AdminController($c->get(\App\Services\AdminService::class))
 );
+$container->singleton(
+    \App\Repositories\Contracts\DashboardRepositoryInterface::class,
+    fn($c) => new \App\Repositories\DashboardRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\DashboardService::class,
+    fn($c) => new \App\Services\DashboardService($c->get(\App\Repositories\Contracts\DashboardRepositoryInterface::class))
+);
+$container->singleton(
+    \App\Controllers\DashboardController::class,
+    fn($c) => new \App\Controllers\DashboardController($c->get(\App\Services\DashboardService::class))
+);
 
 $r = $_GET['r'] ?? '';
 $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -311,12 +322,11 @@ try {
     /* ---------------- BACKOFFICE · Fase 1 ---------------- */
     case 'kpis':
         admin('dashboard.ver');
-        [$desde, $hasta] = mg_rango($_GET['desde'] ?? null, $_GET['hasta'] ?? null);
-        out(mg_kpis($desde, $hasta));
+        out($container->get(\App\Controllers\DashboardController::class)->kpis($_GET));
 
     case 'alertas':
         admin('dashboard.ver');
-        $a = mg_alertas();
+        $a = $container->get(\App\Controllers\DashboardController::class)->alertas();
         // La UI solo oculta botones; el recorte real ocurre aquí.
         if (!puede('productos.ver')) unset($a['stock']);
         if (!puede('pedidos.ver'))   unset($a['detenidos']);
@@ -325,26 +335,26 @@ try {
 
     case 'notificaciones':
         admin();
-        out(mg_notificaciones((int)($_SESSION['uid'] ?? 0)));
+        out($container->get(\App\Controllers\DashboardController::class)->notificaciones());
 
     case 'notificacion_leer':
         admin();
         req($m === 'POST', 'Método no permitido');
         $b = body();
         $id = isset($b['id']) && (int)$b['id'] > 0 ? (int)$b['id'] : null;
-        out(['ok' => true, 'marcadas' => mg_notificacion_leer((int)($_SESSION['uid'] ?? 0), $id)]);
+        out($container->get(\App\Controllers\DashboardController::class)->notificacionLeer($id));
 
     case 'pedidos_recientes':
         admin('pedidos.ver');
-        out(mg_pedidos_recientes((int)($_GET['limite'] ?? 8)));
+        out($container->get(\App\Controllers\DashboardController::class)->pedidosRecientes((int)($_GET['limite'] ?? 8)));
 
     case 'buscar':
         admin();
-        out(mg_buscar((string)($_GET['q'] ?? '')));
+        out($container->get(\App\Controllers\DashboardController::class)->buscar((string)($_GET['q'] ?? '')));
 
     case 'visita':
         req($m === 'POST', 'Método no permitido');
-        out(mg_visita(body()));
+        out($container->get(\App\Controllers\DashboardController::class)->visita(body()));
 
     /* ---------------- BACKOFFICE · Fase 2 (catálogo) ---------------- */
     case 'categorias':

@@ -36,7 +36,6 @@ date_default_timezone_set('America/Bogota');
 
 require __DIR__ . '/../api/src/Conexion.php';
 require __DIR__ . '/../api/src/Cache.php';
-require __DIR__ . '/../api/src/Metricas.php';
 require __DIR__ . '/../api/src/Util.php';
 
 // Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
@@ -53,7 +52,7 @@ try {
     $crm = new \App\Services\CrmService($pdo, new \App\Repositories\CrmRepository($pdo));
     $marketing = new \App\Services\MarketingService($pdo, new \App\Repositories\MarketingRepository($pdo), $outbox, $crm, $config);
 
-    $snapshots = mg_snapshots_reparar(7);
+    $snapshots = (new \App\Services\DashboardService(new \App\Repositories\DashboardRepository($pdo)))->snapshotsReparar(7);
     $cache     = cache_limpiar();
     $visitas   = $pdo->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
     $notifs    = $pdo->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
