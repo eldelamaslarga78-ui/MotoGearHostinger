@@ -9,6 +9,7 @@ use PDO;
 
 final class Database
 {
+    private static ?self $instancia = null;
     private PDO $pdo;
 
     public function __construct(string $host, string $nombre, string $usuario, string $clave)
@@ -30,7 +31,13 @@ final class Database
     /** Construye la conexión con las constantes DB_* de config.local.php. */
     public static function desdeConstantes(): self
     {
-        return new self((string)DB_HOST, (string)DB_NAME, (string)DB_USER, (string)DB_PASS);
+        return new self((string)\DB_HOST, (string)\DB_NAME, (string)\DB_USER, (string)\DB_PASS);
+    }
+
+    /** Conexión única de la aplicación (reemplaza al helper global db()). */
+    public static function singleton(): self
+    {
+        return self::$instancia ??= self::desdeConstantes();
     }
 
     public function pdo(): PDO
