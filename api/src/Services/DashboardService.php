@@ -9,6 +9,7 @@ declare(strict_types=1);
  */
 namespace App\Services;
 
+use App\Core\Cache;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
 
 final class DashboardService
@@ -17,7 +18,7 @@ final class DashboardService
     private const POR_DESPACHAR = ['nuevo', 'confirmado', 'en_preparacion'];
     private const ANULADO = ['cancelado', 'devuelto'];
 
-    public function __construct(private DashboardRepositoryInterface $repo)
+    public function __construct(private DashboardRepositoryInterface $repo, private Cache $cache)
     {
     }
 
@@ -139,7 +140,7 @@ final class DashboardService
     public function kpis(string $desde, string $hasta): array
     {
         $clave = 'kpis:v1:' . $desde . ':' . $hasta . ':' . $this->versionDatos();
-        $hit = cache_leer($clave);
+        $hit = $this->cache->leer($clave);
         if (is_array($hit)) {
             $hit['cache'] = true;
             return $hit;
@@ -169,7 +170,7 @@ final class DashboardService
             'cache'    => false,
         ];
 
-        cache_guardar($clave, $r, 60);
+        $this->cache->guardar($clave, $r, 60);
         return $r;
     }
 
@@ -212,7 +213,7 @@ final class DashboardService
     public function alertas(): array
     {
         $clave = 'alertas:v1:' . $this->versionDatos() . ':' . date('YmdH');
-        $hit = cache_leer($clave);
+        $hit = $this->cache->leer($clave);
         if (is_array($hit)) {
             return $hit;
         }
@@ -225,7 +226,7 @@ final class DashboardService
             'generado'  => date('c'),
         ];
 
-        cache_guardar($clave, $r, 60);
+        $this->cache->guardar($clave, $r, 60);
         return $r;
     }
 

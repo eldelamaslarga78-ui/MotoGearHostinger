@@ -6,7 +6,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 (new \App\Core\Autoloader(__DIR__ . '/src'))->register();
 
 require __DIR__ . '/db.php';
-require __DIR__ . '/src/Cache.php';
 
 require __DIR__ . '/src/Util.php';
 
@@ -188,12 +187,19 @@ $container->singleton(
     fn($c) => new \App\Controllers\AdminController($c->get(\App\Services\AdminService::class))
 );
 $container->singleton(
+    \App\Core\Cache::class,
+    fn($c) => new \App\Core\Cache($c->get(PDO::class))
+);
+$container->singleton(
     \App\Repositories\Contracts\DashboardRepositoryInterface::class,
     fn($c) => new \App\Repositories\DashboardRepository($c->get(PDO::class))
 );
 $container->singleton(
     \App\Services\DashboardService::class,
-    fn($c) => new \App\Services\DashboardService($c->get(\App\Repositories\Contracts\DashboardRepositoryInterface::class))
+    fn($c) => new \App\Services\DashboardService(
+        $c->get(\App\Repositories\Contracts\DashboardRepositoryInterface::class),
+        $c->get(\App\Core\Cache::class)
+    )
 );
 $container->singleton(
     \App\Controllers\DashboardController::class,

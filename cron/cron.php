@@ -35,7 +35,6 @@ define('MG_APP', true);
 date_default_timezone_set('America/Bogota');
 
 require __DIR__ . '/../api/src/Conexion.php';
-require __DIR__ . '/../api/src/Cache.php';
 require __DIR__ . '/../api/src/Util.php';
 
 // Nueva arquitectura: autoloader PSR-4 (App\ → api/src/).
@@ -53,7 +52,7 @@ try {
     $marketing = new \App\Services\MarketingService($pdo, new \App\Repositories\MarketingRepository($pdo), $outbox, $crm, $config);
 
     $snapshots = (new \App\Services\DashboardService(new \App\Repositories\DashboardRepository($pdo)))->snapshotsReparar(7);
-    $cache     = cache_limpiar();
+    $cache     = (new \App\Core\Cache($pdo))->limpiar();
     $visitas   = $pdo->exec('DELETE FROM visitas WHERE fecha < CURDATE() - INTERVAL 180 DAY');
     $notifs    = $pdo->exec('DELETE FROM notificaciones WHERE leida = 1 AND creado < NOW() - INTERVAL 90 DAY');
     $expirados = (new \App\Services\PedidoService($pdo, new \App\Repositories\PedidoRepository($pdo)))->expirarPendientes();
