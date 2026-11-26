@@ -8,7 +8,6 @@ require __DIR__ . '/src/Core/Autoloader.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/src/Cache.php';
 require __DIR__ . '/src/Metricas.php';
-require __DIR__ . '/src/Admin.php';
 
 require __DIR__ . '/src/Util.php';
 
@@ -176,6 +175,18 @@ $container->singleton(
 $container->singleton(
     \App\Controllers\MarketingController::class,
     fn($c) => new \App\Controllers\MarketingController($c->get(\App\Services\MarketingService::class))
+);
+$container->singleton(
+    \App\Repositories\Contracts\AdminRepositoryInterface::class,
+    fn($c) => new \App\Repositories\AdminRepository($c->get(PDO::class))
+);
+$container->singleton(
+    \App\Services\AdminService::class,
+    fn($c) => new \App\Services\AdminService($c->get(\App\Repositories\Contracts\AdminRepositoryInterface::class))
+);
+$container->singleton(
+    \App\Controllers\AdminController::class,
+    fn($c) => new \App\Controllers\AdminController($c->get(\App\Services\AdminService::class))
 );
 
 $r = $_GET['r'] ?? '';
@@ -511,29 +522,29 @@ try {
     /* ---------------- BACKOFFICE · Administración (migración del panel anterior) ---------------- */
     case 'mensajes':
         admin('mensajes.ver');
-        out(adm_mensajes($_GET));
+        out($container->get(\App\Controllers\AdminController::class)->mensajes($_GET));
 
     case 'usuarios':
         admin('usuarios.gestionar');
-        out(['items' => adm_usuarios(), 'roles' => adm_roles()]);
+        out($container->get(\App\Controllers\AdminController::class)->usuarios());
 
     case 'usuario_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('usuarios.gestionar');
-        out(adm_usuario_guardar(body()));
+        out($container->get(\App\Controllers\AdminController::class)->usuarioGuardar(body()));
 
     case 'auditoria':
         admin('auditoria.ver');
-        out(adm_auditoria($_GET));
+        out($container->get(\App\Controllers\AdminController::class)->auditoria($_GET));
 
     case 'configuracion':
         admin('config.editar');
-        out(adm_configuracion());
+        out($container->get(\App\Controllers\AdminController::class)->configuracion());
 
     case 'configuracion_guardar':
         req($m === 'POST', 'Método no permitido');
         admin('config.editar');
-        out(adm_configuracion_guardar(body()));
+        out($container->get(\App\Controllers\AdminController::class)->configuracionGuardar(body()));
 
     /* ---------------- ADMIN ---------------- */
     case 'admin':
