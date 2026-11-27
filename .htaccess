@@ -6,14 +6,18 @@ Options -Indexes
 
 RewriteEngine On
 
-# 1. Eliminar la extensión .html de la URL de forma interna
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^([^\.]+)$ $1.html [NC,L]
-
-# 2. Redirigir de forma externa si alguien escribe .html manualmente
+# 1. Redirigir URLs .html antiguas a su ruta limpia (301), salvo admin.html
+#    (panel de respaldo) y los archivos reales.
 RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
+RewriteCond %{REQUEST_URI} !^/admin\.html$ [NC]
 RewriteRule ^ %1 [R=301,L]
+
+# 2. Fallback SPA (History API): toda ruta sin archivo/directorio real se sirve
+#    como index.html. No intercepta la API, el backoffice, las imágenes ni el cron.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/(api|backoffice|img|cron)/
+RewriteRule ^ index.html [L]
 
 # ============================================================================
 # Cabeceras de seguridad
