@@ -10,7 +10,7 @@ export default {
     try { catalog = await obtenerCatalogo(ctx.store); } catch { catalog = { productos: [], categorias: [] }; }
 
     const radiosCat = [['todos', 'Todos'], ...catalog.categorias.map((c) => [c.id, c.nombre])]
-      .map(([v, t]) => `<label class="filtro-opcion"><input type="radio" name="categoria" value="${esc(v)}"> ${esc(t)}</label>`).join('');
+      .map(([v, t]) => `<label class="filtro-opcion"><input type="radio" name="categoria" value="${esc(v)}"${v === 'todos' ? ' checked' : ''}> ${esc(t)}</label>`).join('');
     const marcas = [...new Set(catalog.productos.map((p) => p.marca).filter(Boolean))]
       .map((m) => `<label class="filtro-opcion"><input type="checkbox" value="${esc(m)}"> ${esc(m)}</label>`).join('');
 
